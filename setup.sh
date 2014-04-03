@@ -20,6 +20,8 @@ function startPanamax {
 
 function installPanamax {
 
+    sudo systemctl start etcd
+    sudo systemctl start fleet
     if [[  $operation == "reinstall" ]]; then
         echo ""
         echo "Uninstalling Panamax"
