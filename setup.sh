@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 pmxCntUI='panamax-container-ui'
 pmxCntAPI='panamax-container-api'
@@ -9,13 +9,13 @@ pmxSvcAPI='panamax-api.service'
 
 
 function stopPanamax {
-    sudo systemctl stop $pmxSvcAPI
-    sudo systemctl stop $pmxSvcUI
+    sudo fleetctl stop $pmxSvcAPI
+    sudo fleetctl stop $pmxSvcUI
 }
 
 function startPanamax {
-    sudo systemctl start $pmxSvcAPI
-    sudo systemctl start $pmxSvcAPI
+    sudo fleetctl start $pmxSvcAPI
+    sudo fleetctl start $pmxSvcAPI
 }
 
 function installPanamax {
@@ -23,12 +23,13 @@ function installPanamax {
     if [[  $operation == "reinstall" ]]; then
         echo ""
         echo "Uninstalling Panamax"
-        stopPanamax
+        fleetctl destroy $pmxSvcAPI
+        fleetctl destroy $pmxSvcUI
         echo "Installing Panamax"
         startPanamax
     else
-        sudo cp *.service /media/state/units/
-        sudo systemctl restart local-enable.service
+        sudo fleetctl submit *.service
+        sudo fleetctl start *.service
     fi
 
     #tail -f $VAULogFile | awk '/Phase/;/Phase 2 ended/ { exit }'
@@ -42,7 +43,8 @@ function openPanamax {
     echo "waiting for panamax to start....."
     until [ `curl -sL -w "%{http_code}" "http://localhost:3000"  -o /dev/null` == "200" ];
     do
-      journalctl -n 2
+      #fleetctl status $pmxSvcAPI
+      #fleetctl status $pmxSvcUI
       sleep 2
     done
 }
@@ -50,7 +52,7 @@ function openPanamax {
 function main {
 
     operation=$1
-    
+
     if [[ $# -gt 0 ]]; then
 	case $operation in
 	    install) installPanamax; break;;
@@ -61,7 +63,7 @@ function main {
 	            break;;
 
 	esac
-	
+
     else
         echo "Please select one of the following options: "
         select operation in "install" "restart" "reinstall"; do

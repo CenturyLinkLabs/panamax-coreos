@@ -1,13 +1,4 @@
-[Unit]
-Description=Panamax API
-After=docker.service
-Requires=docker.service
-
 [Service]
-Type=oneshot
 ExecStart=/bin/bash -c '/usr/bin/docker start -a panamax-container-api ||/usr/bin/docker run -t --name panamax-container-api -w /var/app/panamax-api -v /var/run/docker.sock:/var/run/docker.sock:rw -p 3001:3001 74.201.240.198:5000/panamax-api rails s'
 ExecStop=/usr/bin/docker kill panamax-container-api
-
-[Install]
-WantedBy=local.target
 

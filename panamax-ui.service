@@ -1,12 +1,4 @@
-[Unit]
-Description=Panamax UI
-After=docker.service
-Requires=docker.service
-
 [Service]
-Type=oneshot
 ExecStart=/bin/bash -c '/usr/bin/docker start -a panamax-container-ui ||/usr/bin/docker run -t --name panamax-container-ui -w /var/app/panamax-ui -v /var/run/docker.sock:/var/run/docker.sock:rw -p 3000:3000 74.201.240.198:5000/panamax-ui rails s'
 ExecStop=/usr/bin/docker stop panamax-contaner-ui
-[Install]
-WantedBy=local.target
 
