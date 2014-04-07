@@ -1,7 +1,7 @@
 #!/bin/bash 
 
-#pmxCntUI='panamax-container-ui'
-#pmxCntAPI='panamax-container-api'
+pmxCntUI='panamax-container-ui'
+pmxCntAPI='panamax-container-api'
 #pmxImgUI='panamax/panamax-ui'
 #pmxImgAPI='panamax/panamax-api'
 pmxSvcUI='panamax-ui.service'
@@ -26,33 +26,20 @@ function installPanamax {
     operatePanamax submit
     echo "Starting Panamax fleet"
     operatePanamax start
-
-    openPanamax
-    exit 0;
 }
 
 
 function openPanamax {
     echo "waiting for panamax to start....."
-    until [ `curl -sL -w "%{http_code}" "http://localhost:3000"  -o /dev/null` == "200" ];
+    containersCreated=0
+    until [ $containersCreated -eq 1 ]
     do
-      sleep 2
-
-      oldUiOutput=''
-      uiOutput=`journalctl -u panamax-ui.service -r -n 1`
-      echo $uiOutput
-      if [[ "$uiOuput" -ne "$oldUiOutput" ]]; then
-        echo $uiOutput
-        $oldUiOutput=$uiOutput
-      fi
-
-      oldApiOutput=''
-      apiOutput=`journalctl -u panamax-api.service -r -n 1`
-      if [[ "$apiOuput" -ne "$oldApiOutput" ]]; then
-        echo $apiOutput
-        $oldAPiOutput=$apiOutput
-      fi
-
+        sleep 2
+        printf "#"
+        if [[ ( `docker ps -a | grep $pmxCntUI | grep -o $pmxCntUI` != "" ) &&  ( `docker ps -a | grep $pmxCntAPI | grep -o $pmxCntAPI` != "" ) ]]; then
+            echo "Containers Created"
+            containersCreated=1
+        fi
     done
 }
 
@@ -62,12 +49,18 @@ function main {
     
     if [[ $# -gt 0 ]]; then
         case $operation in
-            install) installPanamax; break;;
-            reinstall) installPanamax; break;;
+             install)
+                installPanamax;
+                openPanamax;
+                installPanamax;
+                ;;
+            reinstall)
+                installPanamax;
+                ;;
             restart)
-                    stopPanamax
-                    startPanamax
-                    break;;
+                stopPanamax
+                startPanamax
+                ;;
 
         esac
         
@@ -75,7 +68,11 @@ function main {
         echo "Please select one of the following options: "
         select operation in "install" "restart" "reinstall"; do
         case $operation in
-            install) installPanamax; break;;
+             install)
+                installPanamax;
+                openPanamax;
+                installPanamax;
+                ;;
             restart) restartPanamax; break;;
             reinstall) installPanamax; break;;
         esac
