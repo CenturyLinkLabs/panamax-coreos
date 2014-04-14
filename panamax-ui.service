@@ -1,3 +1,0 @@
-[Service]
-ExecStart=/bin/bash -c '/usr/bin/docker start -a panamax-container-ui ||/usr/bin/docker run --name panamax-container-ui -v /var/run/docker.sock:/var/run/docker.sock:rw  -d  -p 3000:3000 74.201.240.198:5000/panamax-ui'
-ExecStop=/usr/bin/docker stop panamax-container-ui

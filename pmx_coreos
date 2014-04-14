@@ -1,0 +1,24 @@
+#! /bin/bash
+
+cp units/* /etc/systemd/system/
+cp -R scripts/* /etc/systemd/user/
+
+sudo systemctl enable panamax.service
+sudo systemctl start panamax.service
+
+
+wait_until_started() {
+    echo Waiting until Panamax is reassembled
+    regex='Panamax setup complete'
+    journalctl -u panamax.service -f | while read line; do
+       echo $line
+            if [[ $line == *$regex* ]]; then
+                    pkill -9 -P $$ journalctl
+            fi
+    done
+    echo reassembly complete
+}
+
+wait_until_started
+
+exit 0

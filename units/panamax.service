@@ -1,0 +1,10 @@
+[Unit]
+Description=Panamax local
+After=docker.service
+Requires=docker.service
+
+[Service]
+ExecStart=/etc/systemd/user/start_svc.sh
+
+[Install]
+WantedBy=multi-user.target
