@@ -8,14 +8,6 @@ function checkPreReqs {
     echo "Checking if required software is installed."
     echo ""
     
-    git --version 2>&1 >/dev/null
-    if [[ "$?" -ne "0" ]]; then
-	echo "Please install git client (http://git-scm.com/downloads)."; 
-	exit 1;
-    else 
-	echo $'Git client installed.'
-    fi
-    
     vagrant -v | grep "1.5" 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
 	echo "Please install vagrant version 1.5 or newer (https://www.vagrantup.com/downloads.html).";
@@ -117,9 +109,19 @@ function openPanamax {
 }
 
 function restartPanamax {
+    echo Restarting Panamax
     source .env
     vagrant reload || { echo >&2 "Restarting panamax seems to have failed. Please try reinstall."; exit 1; }
     openPanamax;
+    echo Restart complete
+}
+
+
+function stopPanamax {
+    echo Stopping Panamax
+    source .env
+    vagrant halt || { echo >&2 "Stopping panamax seems to have failed. Please try reinstall."; exit 1; }
+    echo Panamax stopped.
 }
 
 function showHelp {
@@ -152,6 +154,7 @@ function main {
 	    install) installPanamax;;
 	    reinstall   ) installPanamax;;
 	    restart) restartPanamax;;
+	    stop) stopPanamax;;
 	esac
 	done
     fi
