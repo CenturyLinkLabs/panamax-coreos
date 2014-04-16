@@ -144,6 +144,7 @@ function main {
 	    install) installPanamax "$@" || { showHelp; exit 1; } ;;
 	    reinstall) installPanamax "$@" || { showHelp; exit 1; } ;;
 	    restart) restartPanamax;;
+            stop) stopPanamax;;
 	    *) showHelp;;
 	esac
 	
