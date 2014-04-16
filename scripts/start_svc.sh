@@ -50,4 +50,4 @@ else
     fi
 fi
 
-echo "Panamax setup complete"
+echo Panamax setup complete
