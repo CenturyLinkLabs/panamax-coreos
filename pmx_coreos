@@ -13,8 +13,8 @@ function installPanamax {
  fi
 
  echo "Installing Panamax..."
- cp units/* /etc/systemd/system/
- cp -R scripts/* /etc/systemd/user/
+ sudo cp units/* /etc/systemd/system/
+ sudo cp -R scripts/* /etc/systemd/user/
 
  sudo systemctl enable panamax.service
  sudo systemctl start panamax.service
