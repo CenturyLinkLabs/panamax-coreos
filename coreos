@@ -43,8 +43,9 @@ function stopPanamax {
 }
 
 function waitUntilStarted {
+    logStartTime="`date +'%Y-%m-%d %H:%M:%S'`"
     regex='Panamax setup complete'
-    journalctl -u panamax.service -f | while read line; do
+    journalctl -u panamax.service --since="$logStartTime" -f | while read line; do
        echo $line
        if [[ $line == *$regex* ]]; then
          pkill -9 -P $$ journalctl
