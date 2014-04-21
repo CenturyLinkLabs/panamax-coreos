@@ -81,22 +81,24 @@ function readParams {
     for i in "$@"
     do
     case $i in
+        -tg=*|--target=*)
+            target="${i#*=}"
 	-op=*|--operation=*)
-	operation="${i#*=}"
-	;;
+            operation="${i#*=}"
+            ;;
 	-ppUi=*|--panamaxPortUi=*)
-	panamaxPortUi="${i#*=}"
-	;;
+            panamaxPortUi="${i#*=}"
+            ;;
 	-ppApi=*|--panamaxPortApi=*)
-	panamaxPortApi="${i#*=}"
-	;;
+            panamaxPortApi="${i#*=}"
+            ;;
 	-vd=*|--vagrantDownload=*)
-	download="${i#*=}"
-	;;
+            download="${i#*=}"
+            ;;
 	*)
-	showHelp;
-	exit 1;
-	;;
+            showHelp;
+            exit 1;
+            ;;
     esac
     done
 }

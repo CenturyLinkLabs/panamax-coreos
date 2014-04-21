@@ -19,8 +19,8 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
   config.vm.synced_folder ".", "/var/panamax", type: "rsync"
-  config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/pmx_coreos"
-  config.vm.provision "shell", inline: "cd /var/panamax && ./pmx_coreos"
+  config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/coreos"
+  config.vm.provision "shell", inline: "cd /var/panamax && ./coreos install"
  
  config.vm.synced_folder ".", "/vagrant", disabled: true
  config.ssh.username = "core"

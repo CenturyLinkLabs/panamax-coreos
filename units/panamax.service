@@ -4,7 +4,9 @@ After=docker.service
 Requires=docker.service
 
 [Service]
+Type=oneshot
 ExecStart=/etc/systemd/user/start_svc.sh
+#ExecStop=/bin/bash -c '/etc/systemd/user/start_svc.sh stop'
 
 [Install]
 WantedBy=multi-user.target
