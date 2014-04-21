@@ -10,7 +10,7 @@ function installPanamax {
    if [[ `docker ps -a -q`  != ""  ]]; then
     echo Found some containers, deleting them.
     sudo docker rm -f `docker ps -a -q`
-    #TODO: Uncomment This: sudo docker rmi `docker images -q`
+    sudo docker rmi `docker images -q`
    fi
  fi
 
