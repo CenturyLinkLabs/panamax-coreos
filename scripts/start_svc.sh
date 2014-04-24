@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CONTAINER_NAME_UI="pmx-container-ui"
-CONTAINER_NAME_API="pmx-container-api"
+CONTAINER_NAME_UI="PMX_UI"
+CONTAINER_NAME_API="PMX_API"
 
 function startPmx {
     sudo systemctl start etcd
@@ -37,7 +37,7 @@ function startPmx {
 
     if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI` == "" ]]; then
         echo "No Container....building."
-        /usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  -e PMX_API_PORT=3000 -e PMX_API_HOST=$API_CONTAINER_IP  -d  -p 3000:3000 74.201.240.198:5000/panamax-ui
+        /usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 74.201.240.198:5000/panamax-ui
     else
         echo "Container Found....Trying restart..."
         /usr/bin/docker restart $CONTAINER_NAME_UI
@@ -46,7 +46,7 @@ function startPmx {
         if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -i exit` != "" ]]; then
             echo "Dead Container....rebuilding."
             /usr/bin/docker rm -f $CONTAINER_NAME_UI
-            /usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw   -e PMX_API_PORT=3001 -e PMX_API_HOST=$API_CONTAINER_IP  -d  -p 3000:3000 74.201.240.198:5000/panamax-ui
+            /usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw   --link $CONTAINER_NAME_API:PMX_API  -d  -p 3000:3000 74.201.240.198:5000/panamax-ui
         fi
     fi
 }
