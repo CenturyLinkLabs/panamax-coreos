@@ -3,6 +3,7 @@
 PANAMAX_PORT_UI=8898
 PANAMAX_PORT_API=8899
 
+
 function checkPreReqs {
     echo ""
     echo "Checking if required software is installed."
@@ -65,7 +66,6 @@ function installPanamax {
     fi  
             
     openPanamax;
-    exit 0;
 }
 
 
@@ -134,6 +134,30 @@ function showHelp {
     echo ""
 }
 
+
+function checkForUpdate {
+    echo ""
+    echo Checking for Updates.
+    currentVersion=$(<version.txt)
+    majVer=`echo $currentVersion | awk -F "." '{ print $1 }'`
+    minVer=`echo $currentVersion | awk -F "." '{ print $2 }'`
+    patVer=`echo $currentVersion | awk -F "." '{ print $3 }'` 
+    
+    nextMinVer=`echo $minVer + 1 | bc`
+    nextMajVer=`echo $majVer + 1 | bc`
+    nextPatVer=`echo $patVer + 1 | bc`
+    
+    updateUrl="http://63.128.180.11/installer/"
+    versionList=`curl -sL "$updateUrl"`
+    echo ""
+    if [[ `echo $versionList | grep "$majVer.$minVer.$nextPatVer"` != "" || `echo $versionList | grep "$majVer.$nextMinVer.$patVer"` != "" || `echo $versionList | grep "$nextMajVer.$minVer.$patVer"` != "" ]]; then
+      echo "Local Version: Setup: $(<version.txt), Newer version of setup found, please update ($updateUrl)."
+   else 
+      echo "Local Version: Setup: $(<version.txt), You're on the latest version."
+   fi  
+   echo ""
+}
+
 function main {
 
     checkPreReqs;
@@ -145,6 +169,7 @@ function main {
 	    reinstall) installPanamax "$@" || { showHelp; exit 1; } ;;
 	    restart) restartPanamax;;
             stop) stopPanamax;;
+            update) checkForUpdate;;
 	    *) showHelp;;
 	esac
 	
@@ -152,13 +177,16 @@ function main {
         echo "Please select one of the following options: "
 	select operation in "install" "restart" "reinstall"; do
 	case $operation in 
-	    install) installPanamax;;
-	    reinstall   ) installPanamax;;
-	    restart) restartPanamax;;
-	    stop) stopPanamax;;
+	    install) installPanamax; break;;
+	    reinstall   ) installPanamax; break;;
+	    restart) restartPanamax; break;;
+	    stop) stopPanamax; break;;
+            update) checkForUpdate; break;;
 	esac
 	done
     fi
+    checkForUpdate
+    exit 0;
 }
 
 main "$@";
