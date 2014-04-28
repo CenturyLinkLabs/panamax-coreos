@@ -111,7 +111,7 @@ function openPanamax {
 function restartPanamax {
     echo Restarting Panamax
     source .env
-    vagrant reload || { echo >&2 "Restarting panamax seems to have failed. Please try reinstall."; exit 1; }
+    vagrant reload || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     openPanamax;
     echo Restart complete
 }
@@ -120,7 +120,7 @@ function restartPanamax {
 function stopPanamax {
     echo Stopping Panamax
     source .env
-    vagrant halt || { echo >&2 "Stopping panamax seems to have failed. Please try reinstall."; exit 1; }
+    vagrant halt || { echo >&2 "Stopping Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     echo Panamax stopped.
 }
 
@@ -137,7 +137,7 @@ function showHelp {
 
 function checkForUpdate {
     echo ""
-    echo Checking for Updates.
+    echo Checking for Updates to Panamax Installer.
     currentVersion=$(<version.txt)
     majVer=`echo $currentVersion | awk -F "." '{ print $1 }'`
     minVer=`echo $currentVersion | awk -F "." '{ print $2 }'`
@@ -151,9 +151,9 @@ function checkForUpdate {
     versionList=`curl -sL "$updateUrl"`
     echo ""
     if [[ `echo $versionList | grep "$majVer.$minVer.$nextPatVer"` != "" || `echo $versionList | grep "$majVer.$nextMinVer.$patVer"` != "" || `echo $versionList | grep "$nextMajVer.$minVer.$patVer"` != "" ]]; then
-      echo "Local Version: Setup: $(<version.txt), Newer version of setup found, please update ($updateUrl)."
+      echo "Installed version: $(<version.txt). A newer version of Panamax Installer is available! Please visit ($updateUrl) to update."
    else 
-      echo "Local Version: Setup: $(<version.txt), You're on the latest version."
+      echo "Installed version: $(<version.txt). You are running the latest version of Panamax Installer."
    fi  
    echo ""
 }
