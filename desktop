@@ -137,7 +137,7 @@ function showHelp {
 
 function checkForUpdate {
     echo ""
-    echo Checking for Updates to Panamax Installer.
+    echo Checking for updates to Panamax Installer.
     currentVersion=$(<version.txt)
     majVer=`echo $currentVersion | awk -F "." '{ print $1 }'`
     minVer=`echo $currentVersion | awk -F "." '{ print $2 }'`
@@ -151,9 +151,11 @@ function checkForUpdate {
     versionList=`curl -sL "$updateUrl"`
     echo ""
     if [[ `echo $versionList | grep "$majVer.$minVer.$nextPatVer"` != "" || `echo $versionList | grep "$majVer.$nextMinVer.$patVer"` != "" || `echo $versionList | grep "$nextMajVer.$minVer.$patVer"` != "" ]]; then
-      echo "Installed version: $(<version.txt). A newer version of Panamax Installer is available! Please visit ($updateUrl) to update."
+      echo "Panamax Installer version: $(<version.txt)."
+      echo "*** A newer version of Panamax Installer is available! Please visit ($updateUrl) to update. ***"
    else 
-      echo "Installed version: $(<version.txt). You are running the latest version of Panamax Installer."
+      echo "Panamax Installer version: $(<version.txt)."
+      echo "You are running the latest version of Panamax Installer."
    fi  
    echo ""
 }
