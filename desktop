@@ -59,8 +59,9 @@ function checkForSetupUpdate {
 
         versionList=`curl -sL $setupUpdateUrl | grep zip`
         if [[ "`echo $versionList | grep "$majVer.$minVer.$nextPatVer"`" != "" || "`echo $versionList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" || "`echo $versionList | grep "$nextMajVer.[0-9]\+.[0-9]\+"`" != "" ]]; then
-          echo "A newer version of Panamax Installer is available! Please visit ($setupUpdateUrl) to update."
-          echo "Local Versions: Setup:$SETUP_VERSION"
+          echo "Local Panamax Installer version:"
+          echo "$SETUP_VERSION"
+          echo "***A newer version of Panamax Installer is available! Please visit ($setupUpdateUrl) to update.***"
         fi
     else
         echo "Looks like your current installation is missing some components. Please reinstall."
@@ -78,8 +79,15 @@ function checkForPanamaxUpdate {
         latestTagApi=$(getLatestTagApi)
         latestTagUi=$(getLatestTagUi)
         if [[ "$INSTALL_TAG_UI" < "$latestTagUi" || "$INSTALL_TAG_API" < "$latestTagApi" ]]; then
-            echo "We have an update for panamax application. Please update."
-            echo "Local Versions: UI: $INSTALL_TAG_UI, API: $INSTALL_TAG_API, New Versions: UI: $latestTagUi, API: $latestTagApi"
+            echo "Local Panamax component versions:"
+            echo "UI: $INSTALL_TAG_UI"
+            echo "API: $INSTALL_TAG_API"
+            echo "***We have a component update for Panamax. Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) .***"
+            echo "Latest Panamax component versions:"
+            echo "UI: $latestTagUi" 
+            echo "API: $latestTagApi"
+            echo ""
+            
         elif [[ "$1" == "u" ]]; then
             echo "You are on the latest version panamax application."
         fi
@@ -259,6 +267,9 @@ function main {
     local restart="Restart: Stops and Starts Panamax."
     local reinstall="Reinstall: Deletes your applications and CoreOS VM; reinstalls latest Panamax version."
     local update="Update (not implemented): Retains your applications and updates Panamax to latest version."
+    local stop="Stop: Stops Panamax"
+    local start="Start: Starts Panamax"
+    local uninstall="Uninstall: Deletes applications and CoreOS VM."
 
     checkPreReqs;
     readParams "$@"
@@ -277,15 +288,15 @@ function main {
 	
     else
         echo "Please select one of the following options: "
-        select operation in "$install" "stop" "start" "$restart" "$reinstall" "$update" "uninstall"; do
+        select operation in "$install" "$stop" "$start" "$restart" "$reinstall" "$update" "$uninstall"; do
         case $operation in
             "$install") getNextOpenPorts; installPanamax; break;;
             "$reinstall") getNextOpenPorts; installPanamax; break;;
             "$restart") restartPanamax; break;;
-            start) restartPanamax; break;;
-            stop) stopPanamax; break;;
+            "$start") restartPanamax; break;;
+            "$stop") stopPanamax; break;;
             "$update") checkForUpdate "u"; break;;
-            uninstall) uninstallPanamax; break;;
+            "$uninstall") uninstallPanamax; break;;
         esac
         done
     fi
