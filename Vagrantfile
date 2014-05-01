@@ -3,7 +3,7 @@
 
 Vagrant.configure("2") do |config|
   Vagrant.require_version ">= 1.5.0"
-  config.vm.box = "coreos-alpha"
+  config.vm.box = ENV['BASEBOX'] || "coreos-alpha"
   config.vm.box_url = "http://storage.core-os.net/coreos/amd64-usr/alpha/coreos_production_vagrant.box"
 
   config.vm.network "forwarded_port", guest: 3000, host: Integer(ENV['PANAMAX_PORT_UI']||8898)
