@@ -140,8 +140,6 @@ function installPanamax {
     fi
     source .env
 
-    exit 0;
-
     if [[  $operation == "reinstall" ]]; then 
         echo ""
         echo "Reinstalling the vagrant machine"
@@ -302,6 +300,7 @@ function main {
         esac
         done
     fi
+    checkForUpdate
     exit 0;
 }
 

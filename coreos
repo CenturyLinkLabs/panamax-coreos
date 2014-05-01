@@ -1,5 +1,7 @@
 #! /bin/bash
 
+IMAGE_TAG=latest
+
 function installPanamax {
  if [[ "$1" == "r" ]]; then
    echo "Uninstalling all docker images."
@@ -14,7 +16,12 @@ function installPanamax {
    fi
  fi
 
+ if [[ "$2" == "dev" ]]; then
+    IMAGE_TAG=dev
+ fi
+
  echo "Installing Panamax..."
+ writeUnitFile
  sudo cp units/* /etc/systemd/system/
  sudo cp scripts/* /etc/systemd/user/
 
@@ -24,6 +31,23 @@ function installPanamax {
  echo "Waiting until Panamax is reassembled"
  waitUntilStarted
  echo "Panamax reassembly complete"
+}
+
+function writeUnitFile {
+ echo "[Unit]
+      Description=Panamax local
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh $IMAGE_TAG && exit 0'
+      ExecStop=/bin/bash -c '/etc/systemd/user/start_svc.sh stop'
+      RemainAfterExit=true
+
+      [Install]
+      WantedBy=multi-user.target" > units/panamax.service
+
 }
 
 function restartPanamax {
@@ -65,8 +89,8 @@ function main {
 
     if [[ $# -gt 0 ]]; then
         case $operation in
-            install) installPanamax "i" && exit 0 || { showHelp; exit 1; } ;;
-            reinstall) installPanamax "r" && exit 0 || { showHelp; exit 1; } ;;
+            install) installPanamax "i" "$2" && exit 0 || { showHelp; exit 1; } ;;
+            reinstall) installPanamax "r" "$2" && exit 0 || { showHelp; exit 1; } ;;
             restart) restartPanamax || { showHelp; exit 1; } ;;
             stop) stopPanamax || { showHelp; exit 1; } ;;
             *) showHelp;;

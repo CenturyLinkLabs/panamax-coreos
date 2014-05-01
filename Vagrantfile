@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
   end
   config.vm.synced_folder ".", "/var/panamax", type: "rsync"
   config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/coreos"
-  config.vm.provision "shell", inline: "cd /var/panamax && ./coreos install"
+  config.vm.provision "shell", inline: "cd /var/panamax && ./coreos install $1", args: "#{ENV['INSTALL_VERSION'] || 'stable'}"
  
  config.vm.synced_folder ".", "/vagrant", disabled: true
  config.ssh.username = "core"
