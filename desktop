@@ -205,7 +205,6 @@ function showHelp {
 }
 
 
-
 function readParams {
     for i in "$@"
     do
