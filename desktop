@@ -162,6 +162,11 @@ function checkForUpdate {
 
 function main {
 
+    local install="Install: First time installing Panamax - Downloads CorsOS VM and installs latest Panamax version."
+    local restart="Restart: Stops and Starts Panamax."
+    local reinstall="Reinstall: Deletes your applications and CoreOS VM; reinstalls latest Panamax version."
+    local update="Update (not implemented): Retains your applications and updates Panamax to latest version."
+
     checkPreReqs;
     readParams "$@"
     
@@ -177,13 +182,13 @@ function main {
 	
     else
         echo "Please select one of the following options: "
-	select operation in "install" "restart" "reinstall"; do
+	select operation in "$install" "$restart" "$reinstall" "$update"; do
 	case $operation in 
-	    install) installPanamax; break;;
-	    reinstall   ) installPanamax; break;;
-	    restart) restartPanamax; break;;
+	    "$install") installPanamax; break;;
+	    "$reinstall"   ) installPanamax; break;;
+	    "$restart") restartPanamax; break;;
 	    stop) stopPanamax; break;;
-            update) checkForUpdate; break;;
+        "$update") checkForUpdate; break;;
 	esac
 	done
     fi
