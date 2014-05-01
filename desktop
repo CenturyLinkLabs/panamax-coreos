@@ -74,7 +74,8 @@ function checkForPanamaxUpdate {
     source .env
     if [[ "$INSTALL_VERSION" == "dev" ]]; then
         if [[ "$INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
-            echo "Dev versions are updated nightly. A newer version is available. Please update it."
+            echo "You are currently running a Dev version of Panamax which is updated nightly."
+            echo "A newer Dev version is available. Use the update option to get the latest Dev version."
         fi
     elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" ]]; then
         latestTagApi=$(getLatestTagApi)
