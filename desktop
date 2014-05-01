@@ -61,7 +61,7 @@ function checkForSetupUpdate {
         if [[ "`echo $versionList | grep "$majVer.$minVer.$nextPatVer"`" != "" || "`echo $versionList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" || "`echo $versionList | grep "$nextMajVer.[0-9]\+.[0-9]\+"`" != "" ]]; then
           echo "Local Panamax Installer version:"
           echo "$SETUP_VERSION"
-          echo "***A newer version of Panamax Installer is available! Please visit ($setupUpdateUrl) to update.***"
+          echo "*** Panamax Installer is out of date! Please visit ($setupUpdateUrl) to update. ***"
         fi
     else
         echo "Looks like your current installation is missing some components. Please reinstall."
@@ -82,7 +82,7 @@ function checkForPanamaxUpdate {
             echo "Local Panamax component versions:"
             echo "UI: $INSTALL_TAG_UI"
             echo "API: $INSTALL_TAG_API"
-            echo "***We have a component update for Panamax. Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) .***"
+            echo "*** Panamax is out of date. Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) . ***"
             echo "Latest Panamax component versions:"
             echo "UI: $latestTagUi" 
             echo "API: $latestTagApi"
