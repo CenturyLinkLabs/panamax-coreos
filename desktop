@@ -60,6 +60,7 @@ function checkForSetupUpdate {
         versionList=`curl -sL "$setupUpdateUrl"`
         if [[ `echo $versionList | grep "$majVer.$minVer.$nextPatVer"` != "" || `echo $versionList | grep "$majVer.$nextMinVer.[0-9]\+"` != "" || `echo $versionList | grep "$nextMajVer.[0-9]\+.[0-9]\+"` != "" ]]; then
           echo "A newer version of Panamax Installer is available! Please visit ($setupUpdateUrl) to update."
+          echo "Local Versions: Setup:$SETUP_VERSION"
         fi
     else
         echo "Looks like your current installation is missing some components. Please reinstall."
@@ -71,14 +72,15 @@ function checkForPanamaxUpdate {
     source .env
     if [[ "$INSTALL_VERSION" == "dev" ]]; then
         if [[ "$INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
-            echo "Dev versions are updated nightly. Your previous install was $date. A newer version is available. Please update it."
+            echo "Dev versions are updated nightly. A newer version is available. Please update it."
         fi
     elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" ]]; then
         latestTagApi=$(getLatestTagApi)
         latestTagUi=$(getLatestTagUi)
         if [[ "$INSTALL_TAG_UI" < "$latestTagUi" || "$INSTALL_TAG_API" < "$latestTagApi" ]]; then
             echo "We have an update for panamax application. Please update."
-        else
+            echo "Local Versions: UI: $INSTALL_TAG_API, API: $INSTALL_TAG_UI, New Versions: UI: $latestTagUi, API: $latestTagApi"
+        elif [[ "$1" == "u" ]]; then
             echo "You are on the latest version panamax application."
         fi
     fi
@@ -270,7 +272,7 @@ function main {
             restart) restartPanamax;;
             stop) stopPanamax;;
             start) restartPanamax;;
-            update) checkForUpdate;;
+            update) checkForUpdate "u";;
             uninstall) uninstallPanamax;;
             *) showHelp;;
         esac
@@ -284,7 +286,7 @@ function main {
             "$restart") restartPanamax; break;;
             start) restartPanamax; break;;
             stop) stopPanamax; break;;
-            "$update") checkForUpdate; break;;
+            "$update") checkForUpdate "u"; break;;
             uninstall) uninstallPanamax; break;;
         esac
         done
