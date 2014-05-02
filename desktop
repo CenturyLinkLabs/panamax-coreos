@@ -301,13 +301,13 @@ function main {
         echo "Please select one of the following options: "
         select operation in "$install" "$stop" "$start" "$restart" "$reinstall" "$update" "$uninstall"; do
         case $operation in
-            "$install") getNextOpenPorts; installPanamax; break;;
-            "$reinstall") getNextOpenPorts; installPanamax; break;;
-            "$restart") restartPanamax; break;;
-            "$start") restartPanamax; break;;
-            "$stop") stopPanamax; break;;
-            "$update") checkForUpdate "u"; break;;
-            "$uninstall") uninstallPanamax; break;;
+            "$install") operation="install"; installPanamax; break;;
+            "$reinstall") operation="reinstall"; installPanamax; break;;
+            "$restart") operation="restart"; restartPanamax; break;;
+            "$start") operation="start"; restartPanamax; break;;
+            "$stop") operation="stop"; stopPanamax; break;;
+            "$update") operation="update"; checkForUpdate "u"; break;;
+            "$uninstall") operation="uninstall"; uninstallPanamax; break;;
         esac
         done
     fi
