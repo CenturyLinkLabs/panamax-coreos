@@ -88,11 +88,11 @@ function checkForPanamaxUpdate {
             latestTagUi=$(getLatestTagUi)
             if [[ "$INSTALL_TAG_UI" < "$latestTagUi" || "$INSTALL_TAG_API" < "$latestTagApi" ]]; then
                 echo "Local Panamax component versions:"
-                echo "UI: $INSTALL_TAG_UI"
-                echo "API: $INSTALL_TAG_API"
+                echo "   UI: $INSTALL_TAG_UI"
+                echo "  API: $INSTALL_TAG_API"
                 echo "Latest Panamax component versions:"
-                echo "UI: $latestTagUi"
-                echo "API: $latestTagApi"
+                echo "   UI: $latestTagUi"
+                echo "  API: $latestTagApi"
                 echo ""
                 echo "*** Panamax is out of date! Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) . ***"
                 echo ""
