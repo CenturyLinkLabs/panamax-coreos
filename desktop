@@ -70,7 +70,7 @@ function checkForSetupUpdate {
               updateAvailableForSetup="1"
             fi
         else
-            echo "Looks like your current installation is missing some components. Please reinstall."
+            echo ""
         fi
     fi
 }
@@ -103,7 +103,7 @@ function checkForPanamaxUpdate {
             fi
         fi
       else
-        echo "Looks like your current installation is missing some components. Please reinstall."
+        echo ""
       fi
    fi
 }
@@ -113,7 +113,7 @@ function checkForUpdate {
     checkForPanamaxUpdate
     checkForSetupUpdate
     if [[ "$1" == "u" && $updateAvailableForSetup == "0" && $updateAvailableForPmx == "0" ]]; then
-        echo "No Updates found at this time."
+        echo "Panamax is already up to date!"
     fi
     echo ""
 }
