@@ -278,13 +278,13 @@ function readParams {
 
 function main {
 
-    local install="Install: First time installing Panamax - Downloads CorsOS VM and installs latest Panamax version."
-    local restart="Restart: Stops and Starts Panamax."
-    local reinstall="Reinstall: Deletes your applications and CoreOS VM; reinstalls latest Panamax version."
-    local update="Update (not implemented): Retains your applications and updates Panamax to latest version."
-    local stop="Stop: Stops Panamax"
-    local start="Start: Starts Panamax"
-    local uninstall="Uninstall: Deletes applications and CoreOS VM."
+    local install="Install:  First time installing Panamax - Downloads CorsOS VM and installs latest Panamax version."
+    local restart="Restart:  Stops and Starts Panamax."
+    local reinstall="Reinstall:  Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
+    local update="Update (not implemented):  Updates to latest Panamax version. Applications are deleted in this process."
+    local stop="Stop:  Stops Panamax"
+    local start="Start:  Starts Panamax"
+    local uninstall="Uninstall:  Deletes applications and CoreOS VM."
 
     checkPreReqs;
     readParams "$@"
