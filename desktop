@@ -205,9 +205,9 @@ function stopPanamax {
 
 function uninstallPanamax {
   echo Uninstalling Panamax
+  vagrant box remove $BASEBOX
   vagrant destroy -f
   echo Uninstall complete. 
-
 }
 
 function showHelp {
