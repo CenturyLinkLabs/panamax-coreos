@@ -139,7 +139,7 @@ function installPanamax {
     echo export PANAMAX_PORT_UI=$panamaxPortUi > .env
     echo export PANAMAX_PORT_API=$panamaxPortApi >> .env
     echo export BASEBOX=$BASEBOX >> .env
-    echo export SETUP_VERSION=\"$(<version.txt)\" >> .env
+    echo export SETUP_VERSION=\"$(<.version)\" >> .env
     echo export INSTALL_VERSION=$panamaxVersion >> .env
     echo export INSTALL_DATE=\"`date +%s`\" >> .env
     if [[ "$panamaxVersion" == "stable" ]]; then
