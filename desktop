@@ -213,12 +213,12 @@ function uninstallPanamax {
 function showHelp {
     echo ""
     echo "Usage: 
-	 ./desktop up/-op=install [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>]
+	 ./desktop install/-op=install [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>]
 	 ./desktop reinstall/-op=reinstall [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>]
 	 ./desktop restart/-op=restart
      ./desktop start/-op=start
-     ./desktop halt/-op=stop
-     ./desktop destroy/-op=uninstall
+     ./desktop stop/-op=stop
+     ./desktop uninstall/-op=uninstall
      ./desktop status/-op=status
      ./desktop "
     echo ""
@@ -235,13 +235,13 @@ function readParams {
         --stable)
         panamaxVersion=stable
         ;;
-        up)
+        install)
         operation=install
         ;;
-        destroy)
+        uninstall)
         operation=uninstall
         ;;
-        halt)
+        stop)
         operation=stop
         ;;
         start)
