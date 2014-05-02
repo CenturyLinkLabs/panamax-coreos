@@ -278,7 +278,7 @@ function readParams {
 
 function main {
 
-    local install="Install:  First time installing Panamax - Downloads CorsOS VM and installs latest Panamax version."
+    local install="Install:  First time installing Panamax - Downloads CoreOS VM and installs latest Panamax version."
     local restart="Restart:  Stops and Starts Panamax."
     local reinstall="Reinstall:  Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
     local update="Update (not implemented):  Updates to latest Panamax version. Applications are deleted in this process."
