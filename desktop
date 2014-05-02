@@ -50,6 +50,7 @@ function getNextOpenPorts {
 function checkForSetupUpdate {
     if [[ "$checkedSetupForUpdates" != "1" || "$1" == "u" ]]; then
         checkedSetupForUpdates="1"
+        updateAvailableForSetup="0"
         if [[ -f .env ]]; then
             source .env
             majVer=`echo $SETUP_VERSION | awk -F "." '{ print $1 }'`
@@ -66,6 +67,7 @@ function checkForSetupUpdate {
               echo "$SETUP_VERSION"
               echo ""
               echo "*** Panamax Installer is out of date! Please visit ($setupUpdateUrl) to update. ***"
+              updateAvailableForSetup="1"
             fi
         else
             echo "Looks like your current installation is missing some components. Please reinstall."
@@ -76,6 +78,7 @@ function checkForSetupUpdate {
 function checkForPanamaxUpdate {
    if [[ "$checkedPmxForUpdates" != "1" || "$1" == "u" ]]; then
        checkedPmxForUpdates="1"
+       updateAvailableForPmx="0"
        if [[ -f .env ]]; then
         source .env
         if [[ "$INSTALL_VERSION" == "dev" ]]; then
@@ -96,9 +99,7 @@ function checkForPanamaxUpdate {
                 echo ""
                 echo "*** Panamax is out of date! Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) . ***"
                 echo ""
-
-            elif [[ "$1" == "u" ]]; then
-                echo "You are on the latest version panamax application."
+                updateAvailableForPmx="1"
             fi
         fi
       else
@@ -109,8 +110,11 @@ function checkForPanamaxUpdate {
 
 function checkForUpdate {
     echo ""
-    checkForPanamaxUpdate "$@"
-    checkForSetupUpdate "$@"
+    checkForPanamaxUpdate
+    checkForSetupUpdate
+    if [[ "$1" == "u" && $updateAvailableForSetup == "0" && $updateAvailableForPmx == "0" ]]; then
+        echo "No Updates found at this time."
+    fi
     echo ""
 }
 
