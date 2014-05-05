@@ -59,7 +59,7 @@ function startPmx {
         if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -i exit` != "" ]]; then
             echo "Dead Container....rebuilding."
             docker rm -f $CONTAINER_NAME_API
-            echo `$RUN_API`
+            echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
         fi
     fi
 
@@ -85,6 +85,17 @@ function stopPmx {
     echo Stopped panamax conatiners
 }
 
+function updatePmx {
+    echo Updating Panamax...!!!
+    stopPmx
+    #TODO: Once db migration is implemented, we dont need to delete existing apps.
+    cleanupCoreOSContainers
+    docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
+    docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
+    startPmx
+    echo Update Complete....
+}
+
 function cleanupCoreOSContainers {
     if [[ "fleetctl list-units | grep service "  != "" ]]; then
         echo Destroying all fleet units
@@ -102,15 +113,63 @@ function cleanupCoreOSContainers {
     fi
 }
 
-if [[ "$1" == "stop" ]]; then
-   stopPmx
-else
-    if [[ "$1" == "dev" ]]; then
-      IMAGE_TAG="dev"
-    fi
-   startCoreOSServices
-   startPmx
-fi
+function readParams {
+    for i in "$@"
+    do
+    case $i in
+        --dev)
+        IMAGE_TAG=dev
+        ;;
+        --stable)
+        IMAGE_TAG=latest
+        ;;
+        install)
+        operation=install
+        ;;
+        uninstall)
+        operation=uninstall
+        ;;
+        stop)
+        operation=stop
+        ;;
+        start)
+        operation=restart
+        ;;
+        restart)
+        operation=restart
+        ;;
+        update)
+        operation=update
+        ;;
+        *)
+        exit 1;
+        ;;
+    esac
+    done
+}
 
-echo "Panamax setup complete"
-exit 0
+function main {
+    readParams "$@"
+    case $operation in
+        "stop")
+            stopPmx
+            ;;
+        "install")
+            startCoreOSServices
+            startPmx
+            ;;
+        "update")
+            updatePmx
+            ;;
+        *)
+            echo "Not Implemented"
+            exit 1
+            ;;
+    esac
+
+    echo "Panamax setup complete"
+    exit 0
+}
+
+
+main "$@"

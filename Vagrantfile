@@ -6,8 +6,8 @@ Vagrant.configure("2") do |config|
   config.vm.box = ENV['BASEBOX'] || "coreos-alpha"
   config.vm.box_url = "http://storage.core-os.net/coreos/amd64-usr/alpha/coreos_production_vagrant.box"
 
-  config.vm.network "forwarded_port", guest: 3000, host: Integer(ENV['PANAMAX_PORT_UI']||8898)
-  config.vm.network "forwarded_port", guest: 3001, host: Integer(ENV['PANAMAX_PORT_API']||8900)
+  config.vm.network "forwarded_port", guest: 3000, host: Integer(ENV['PANAMAX_PORT_UI']||8888)
+  config.vm.network "forwarded_port", guest: 3001, host: Integer(ENV['PANAMAX_PORT_API']||8889)
   # Fix docker not being able to resolve private registry in VirtualBox
   config.vm.provider :virtualbox do |vb, override|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
   end
   config.vm.synced_folder ".", "/var/panamax", type: "rsync"
   config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/coreos"
-  config.vm.provision "shell", inline: "cd /var/panamax && ./coreos install $1", args: "#{ENV['INSTALL_VERSION'] || 'stable'}"
+  config.vm.provision "shell", inline: "cd /var/panamax && ./coreosh $1 --$2", args: "#{ENV['OPERATION'] || 'install'} #{ENV['IMAGE_TAG'] || 'stable'}"
  
  config.vm.synced_folder ".", "/vagrant", disabled: true
  config.ssh.username = "core"

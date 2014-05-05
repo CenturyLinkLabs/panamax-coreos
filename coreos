@@ -1,9 +1,9 @@
 #! /bin/bash
 
-IMAGE_TAG=latest
+IMAGE_TAG=stable
 
 function installPanamax {
- if [[ "$1" == "r" ]]; then
+ if [[ "$operation" == "reinstall" || "$operation" == "update" ]]; then
    echo "Uninstalling all docker images."
    sudo systemctl stop panamax.service && \
    sudo systemctl disable panamax.service
@@ -12,12 +12,10 @@ function installPanamax {
    if [[ `docker ps -a -q`  != ""  ]]; then
     echo Found some containers, deleting them.
     sudo docker rm -f `docker ps -a -q`
-    sudo docker rmi `docker images -q`
+    if [[ "$operation" == "reinstall" ]]; then
+        sudo docker rmi `docker images -q`
+     fi
    fi
- fi
-
- if [[ "$2" == "dev" ]]; then
-    IMAGE_TAG=dev
  fi
 
  echo "Installing Panamax..."
@@ -41,13 +39,12 @@ function writeUnitFile {
 
       [Service]
       Type=oneshot
-      ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh $IMAGE_TAG && exit 0'
+      ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh install --$IMAGE_TAG && exit 0'
       ExecStop=/bin/bash -c '/etc/systemd/user/start_svc.sh stop'
       RemainAfterExit=true
 
       [Install]
       WantedBy=multi-user.target" > units/panamax.service
-
 }
 
 function restartPanamax {
@@ -64,6 +61,12 @@ function stopPanamax {
   echo Panamax Stopped.
 }
 
+function updatePanamax {
+    echo Updating Panamax
+    installPanamax
+    cd /etc/systemd/user && sudo ./start_svc.sh $operation --$IMAGE_TAG
+    echo Panamax Updated
+}
 function waitUntilStarted {
      logStartTime="`date +'%Y-%m-%d %H:%M:%S'`"
     echo "$logStartTime"
@@ -84,25 +87,64 @@ function showHelp {
     echo ""
 }
 
-function main {
-    operation=$1
+function readParams {
+    for i in "$@"
+    do
+    case $i in
+        --dev)
+        IMAGE_TAG=dev
+        ;;
+        --stable)
+        IMAGE_TAG=stable
+        ;;
+        install)
+        operation=install
+        ;;
+        reinstall)
+        operation=reinstall
+        ;;
+        uninstall)
+        operation=uninstall
+        ;;
+        stop)
+        operation=stop
+        ;;
+        start)
+        operation=restart
+        ;;
+        restart)
+        operation=restart
+        ;;
+        update)
+        operation=update
+        ;;
+        *)
+        exit 1;
+        ;;
+    esac
+    done
+}
 
+function main {
+    readParams "$@"
     if [[ $# -gt 0 ]]; then
         case $operation in
-            install) installPanamax "i" "$2" && exit 0 || { showHelp; exit 1; } ;;
-            reinstall) installPanamax "r" "$2" && exit 0 || { showHelp; exit 1; } ;;
+            install) installPanamax && exit 0 || { showHelp; exit 1; } ;;
+            reinstall) installPanamax && exit 0 || { showHelp; exit 1; } ;;
             restart) restartPanamax || { showHelp; exit 1; } ;;
             stop) stopPanamax || { showHelp; exit 1; } ;;
+            update) updatePanamax || { showHelp; exit 1; } ;;
             *) showHelp;;
         esac
     else
         echo "Please select one of the following options: "
-        select operation in "install" "restart" "reinstall"; do
+        select operation in "install" "restart" "reinstall" "update"; do
         case $operation in
-            install) installPanamax "i" && exit 0; break;;
-            reinstall   ) installPanamax "r" && exit 0; break;;
+            install) installPanamax && exit 0; break;;
+            reinstall   ) installPanamax && exit 0; break;;
             restart) restartPanamax; break;;
             stop) stopPanamax; break;;
+            update) updatePanamax; break;;
         esac
         done
     fi
