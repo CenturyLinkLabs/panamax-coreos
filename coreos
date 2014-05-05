@@ -63,8 +63,11 @@ function stopPanamax {
 
 function updatePanamax {
     echo Updating Panamax
+    docker ps -a
     installPanamax
+    docker ps -a
     cd /etc/systemd/user && sudo ./start_svc.sh $operation --$IMAGE_TAG
+    docker ps -a
     echo Panamax Updated
 }
 function waitUntilStarted {

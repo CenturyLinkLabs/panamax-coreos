@@ -9,6 +9,7 @@ pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
 setupUpdateUrl="http://63.128.180.11/installer/"
 
 function displayLogo {
+echo ""
 echo -e "\033[30;90m██████╗  █████╗ ███╗   ██╗ █████╗ \033[0m\033[30;31m███╗   ███╗ █████╗ ██╗  ██╗\033[0m"
 echo -e "\033[30;90m██╔══██╗██╔══██╗████╗  ██║██╔══██╗\033[0m\033[30;31m████╗ ████║██╔══██╗╚██╗██╔╝\033[0m"
 echo -e "\033[30;90m██████╔╝███████║██╔██╗ ██║███████║\033[0m\033[30;31m██╔████╔██║███████║ ╚███╔╝ \033[0m"
@@ -223,10 +224,15 @@ function updatePanamax {
     setEnvVar "OPERATION" "$operation"
     setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
     source .env
-    echo Updating Panamax
-    vagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
-    openPanamax;
-    echo Update Complete
+    checkForPanamaxUpdate
+    if [[ $updateAvailableForPmx == "0" ]]; then
+        echo Updating Panamax
+        vagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+        openPanamax;
+        echo Update Complete
+    else
+        echo "Panamax is already up to date."
+    fi
 }
 function uninstallPanamax {
   setEnvVar "OPERATION" "$operation"
@@ -328,7 +334,7 @@ function main {
             restart) restartPanamax;;
             stop) stopPanamax;;
             start) restartPanamax;;
-            checkUpdate)checkForUpdate "u";;
+            check)checkForUpdate "u";;
             update) updatePanamax;;
             uninstall) uninstallPanamax;;
             *) showHelp;;
@@ -343,7 +349,7 @@ function main {
             "$restart") operation="restart"; restartPanamax; break;;
             "$start") operation="start"; restartPanamax; break;;
             "$stop") operation="stop"; stopPanamax; break;;
-            "$checkUpdate") operation="check_update"; checkForUpdate "u"; break;;
+            "$checkUpdate") operation="check"; checkForUpdate "u"; break;;
             "$update") operation="update"; updatePanamax; break;;
             "$uninstall") operation="uninstall"; uninstallPanamax; break;;
         esac

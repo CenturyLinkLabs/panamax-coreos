@@ -49,11 +49,15 @@ function buildPmxImages {
 }
 
 function startPmx {
+    docker ps -a
+    docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API
+    docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI
+
     if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API` == "" ]]; then
         echo "No Container....building."
         echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
     else
-        echo "Container Found....Trying restart..."
+        echo "API Container Found....Trying restart..."
         docker restart $CONTAINER_NAME_API
         #Dead container
         if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -i exit` != "" ]]; then
@@ -67,7 +71,7 @@ function startPmx {
         echo "No Container....building."
        echo `$RUN_UI $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG`
     else
-        echo "Container Found....Trying restart..."
+        echo "UI Container Found....Trying restart..."
         docker restart $CONTAINER_NAME_UI
         #Dead container
         if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -i exit` != "" ]]; then
@@ -87,11 +91,13 @@ function stopPmx {
 
 function updatePmx {
     echo Updating Panamax...!!!
-    stopPmx
+    #stopPmx
     #TODO: Once db migration is implemented, we dont need to delete existing apps.
     cleanupCoreOSContainers
+    echo `docker ps -a`
     docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
     docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
+    echo Starting Panamax with updated images.
     startPmx
     echo Update Complete....
 }
@@ -106,6 +112,7 @@ function cleanupCoreOSContainers {
         done
         #fleetctl destroy  `fleetctl list-units | grep service | gawk '{print $1 }'`
     fi
+    echo "Deleting Containers"
     if [[ "`docker ps -a | grep ago`" != "" ]]; then
         echo Destroying remaining docker containers
         docker stop `docker ps -a -q` && \
