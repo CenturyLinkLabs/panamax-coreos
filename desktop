@@ -9,6 +9,8 @@ pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
 setupUpdateUrl="http://63.128.180.11/installer/"
 
 function displayLogo {
+tput clear
+
 echo ""
 echo -e "\033[30;90m██████╗  █████╗ ███╗   ██╗ █████╗ \033[0m\033[30;31m███╗   ███╗ █████╗ ██╗  ██╗\033[0m"
 echo -e "\033[30;90m██╔══██╗██╔══██╗████╗  ██║██╔══██╗\033[0m\033[30;31m████╗ ████║██╔══██╗╚██╗██╔╝\033[0m"
@@ -285,8 +287,8 @@ function readParams {
         update)
         operation=update
         ;;
-        checkUpdate)
-        operation=checkUpdate
+        check)
+        operation=check
         ;;
         reinstall)
         operation=reinstall
