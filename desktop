@@ -8,6 +8,14 @@ pmxUiTags="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
 setupUpdateUrl="http://63.128.180.11/installer/"
 
+function displayLogo {
+echo -e "\033[30;90m██████╗  █████╗ ███╗   ██╗ █████╗ \033[0m\033[30;31m███╗   ███╗ █████╗ ██╗  ██╗\033[0m"
+echo -e "\033[30;90m██╔══██╗██╔══██╗████╗  ██║██╔══██╗\033[0m\033[30;31m████╗ ████║██╔══██╗╚██╗██╔╝\033[0m"
+echo -e "\033[30;90m██████╔╝███████║██╔██╗ ██║███████║\033[0m\033[30;31m██╔████╔██║███████║ ╚███╔╝ \033[0m"
+echo -e "\033[30;90m██╔═══╝ ██╔══██║██║╚██╗██║██╔══██║\033[0m\033[30;31m██║╚██╔╝██║██╔══██║ ██╔██╗ \033[0m"
+echo -e "\033[30;90m██║     ██║  ██║██║ ╚████║██║  ██║\033[0m\033[30;31m██║ ╚═╝ ██║██║  ██║██╔╝ ██╗\033[0m"
+echo -e "\033[30;90m╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝\033[0m\033[30;31m╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝\033[0m"
+}
 function checkPreReqs {
     echo ""
     echo "Checking if required software is installed."
@@ -299,6 +307,7 @@ function readParams {
 
 function main {
     source .env
+    displayLogo
 
     local install="Install:  First time installing Panamax - Downloads CoreOS VM and installs latest Panamax version."
     local restart="Restart:  Stops and Starts Panamax."
