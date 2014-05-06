@@ -5,8 +5,8 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh && exit 0'
-ExecStop=/bin/bash -c '/etc/systemd/user/start_svc.sh stop'
+ExecStart=
+ExecStop=
 RemainAfterExit=true
 
 [Install]

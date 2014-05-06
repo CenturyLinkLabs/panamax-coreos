@@ -2,68 +2,178 @@
 
 CONTAINER_NAME_UI="PMX_UI"
 CONTAINER_NAME_API="PMX_API"
+PRIVATE_REPO=74.201.240.198:5000
+NAMESPACE=panamax
+IMAGE_API=panamax-api
+IMAGE_UI=panamax-ui
+COREOS_ENDPOINT="http://172.17.42.1"
+IMAGE_TAG=latest
+
+RUN_API="/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 "
+RUN_UI="/usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 "
+
+function startCoreOSServices {
+   sudo systemctl stop update-engine-reboot-manager.service
+   sudo systemctl mask update-engine-reboot-manager.service
+   sudo systemctl stop update-engine.service
+   sudo systemctl mask update-engine.service
+   sudo systemctl enable etcd
+   sudo systemctl start etcd
+   sudo systemctl enable fleet.service
+   sudo systemctl start fleet.service
+   if [[ `grep systemd-journal-gateway /etc/passwd` == "" ]]; then
+    sudo useradd --system systemd-journal-gateway
+   fi
+   sudo systemctl enable systemd-journal-gatewayd.socket
+   sudo systemctl start systemd-journal-gatewayd.socket
+}
+
+function buildPmxImages {
+    local forceBuild=0
+    if [[ "$1" == "a" ]];  then #build always
+        forceBuild=1
+    fi
+    if [[ "$forceBuild" == "1" ||   `docker images | grep ruby` == "" ]]; then
+        echo "Base Image not found. Building...."
+        docker build --rm=false -t $NAMESPACE/ruby /var/panamax/panamax-base
+    fi
+    if [[ "$forceBuild" == "1" || `docker images | grep panamax-ui` == "" ]]; then
+        echo "UI Image not found. Building...."
+        docker build --rm=false -t $NAMESPACE/$IMAGE_UI /var/panamax/panamax-ui
+    fi
+    if [[ "$forceBuild" == "1" || `docker images | grep panamax-api` == "" ]]; then
+        echo "API Image not found. Building...."
+        docker build --rm=false -t $NAMESPACE/$IMAGE_API /var/panamax/panamax-api
+    fi
+    docker rm `docker ps -a | grep -v -e Up | grep ago | awk '{print $1}'`
+}
 
 function startPmx {
-    sudo systemctl start etcd
-    sudo systemctl start fleet
-    sudo useradd --system systemd-journal-gateway
-    sudo systemctl start systemd-journal-gatewayd.socket
-    
-    if [[ `docker images | grep panamax-api` == "" ]]; then
-        echo "Image not found. Downloading...."
-        /usr/bin/docker pull 74.201.240.198:5000/panamax-api
-    fi
-    if [[ `docker images | grep panamax-ui` == "" ]]; then
-        echo "Image not found. Downloading...."
-        /usr/bin/docker pull 74.201.240.198:5000/panamax-ui
-    fi 
+    docker ps -a
+    docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API
+    docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI
 
     if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API` == "" ]]; then
         echo "No Container....building."
-        /usr/bin/docker run --name $CONTAINER_NAME_API -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=http://172.17.42.1:19531 -e FLEETCTL_ENDPOINT=http://172.17.42.1:4001 -d  -p 3001:3000 74.201.240.198:5000/panamax-api
+        echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
     else
-        echo "Container Found....Trying restart..."
-        /usr/bin/docker restart $CONTAINER_NAME_API
-        sleep 30
+        echo "API Container Found....Trying restart..."
+        docker restart $CONTAINER_NAME_API
         #Dead container
         if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -i exit` != "" ]]; then
             echo "Dead Container....rebuilding."
-            /usr/bin/docker rm -f $CONTAINER_NAME_API
-            /usr/bin/docker run --name $CONTAINER_NAME_API -v /var/run/docker.sock:/run/docker.sock:rw -e JOURNAL_ENDPOINT=http://172.17.42.1:19531 -e FLEETCTL_ENDPOINT=http://172.17.42.1:4001 -d  -p 3001:3000 74.201.240.198:5000/panamax-api
+            docker rm -f $CONTAINER_NAME_API
+            echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
         fi
     fi
 
-    API_CONTAINER_IP=`sudo docker inspect $CONTAINER_NAME_API | grep IPAddress | cut -d '"' -f 4`
-
     if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI` == "" ]]; then
         echo "No Container....building."
-        /usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 74.201.240.198:5000/panamax-ui
+       echo `$RUN_UI $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG`
     else
-        echo "Container Found....Trying restart..."
-        /usr/bin/docker restart $CONTAINER_NAME_UI
-        sleep 30 
+        echo "UI Container Found....Trying restart..."
+        docker restart $CONTAINER_NAME_UI
         #Dead container
         if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -i exit` != "" ]]; then
             echo "Dead Container....rebuilding."
-            /usr/bin/docker rm -f $CONTAINER_NAME_UI
-            /usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw   --link $CONTAINER_NAME_API:PMX_API  -d  -p 3000:3000 74.201.240.198:5000/panamax-ui
+            docker rm -f $CONTAINER_NAME_UI
+            echo `$RUN_UI $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG`
         fi
     fi
 }
 
 function stopPmx {
     echo Stopping panamax containers
-    /usr/bin/docker stop $CONTAINER_NAME_API
-    /usr/bin/docker stop $CONTAINER_NAME_UI
+    docker stop $CONTAINER_NAME_API
+    docker stop $CONTAINER_NAME_UI
     echo Stopped panamax conatiners
 }
 
+function updatePmx {
+    echo Updating Panamax...!!!
+    #stopPmx
+    #TODO: Once db migration is implemented, we dont need to delete existing apps.
+    cleanupCoreOSContainers
+    docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
+    docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
+    echo Panamax Update Complete....
+}
 
-if [[ "$1" == "stop" ]]; then 
-   stopPmx
-else 
-   startPmx
-fi
+function cleanupCoreOSContainers {
+    if [[ "fleetctl list-units | grep service "  != "" ]]; then
+        echo Destroying all fleet units
+        units=( `fleetctl list-units | grep service | gawk '{print $1 }'` )
+        for i in "${units[@]}"
+        do
+            fleetctl destroy $i
+        done
+        #fleetctl destroy  `fleetctl list-units | grep service | gawk '{print $1 }'`
+    fi
+    echo "Deleting Containers"
+    if [[ "`docker ps -a | grep ago`" != "" ]]; then
+        echo Destroying remaining docker containers
+        docker stop `docker ps -a -q` && \
+        docker rm `docker ps -a -q`
+    fi
+}
 
-echo "Panamax setup complete"
-exit 0
+function readParams {
+    for i in "$@"
+    do
+    case $i in
+        --dev)
+        IMAGE_TAG=dev
+        ;;
+        --stable)
+        IMAGE_TAG=latest
+        ;;
+        install)
+        operation=install
+        ;;
+        uninstall)
+        operation=uninstall
+        ;;
+        stop)
+        operation=stop
+        ;;
+        start)
+        operation=restart
+        ;;
+        restart)
+        operation=restart
+        ;;
+        update)
+        operation=update
+        ;;
+        *)
+        exit 1;
+        ;;
+    esac
+    done
+}
+
+function main {
+    readParams "$@"
+    case $operation in
+        "stop")
+            stopPmx
+            ;;
+        "install")
+            startCoreOSServices
+            startPmx
+            ;;
+        "update")
+            updatePmx
+            ;;
+        *)
+            echo "Not Implemented"
+            exit 1
+            ;;
+    esac
+
+    echo "Panamax setup complete"
+    exit 0
+}
+
+
+main "$@"
