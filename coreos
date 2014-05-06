@@ -2,20 +2,24 @@
 
 IMAGE_TAG=stable
 
-function installPanamax {
- if [[ "$operation" == "reinstall" || "$operation" == "update" ]]; then
-   echo "Uninstalling all docker images."
-   sudo systemctl stop panamax.service && \
-   sudo systemctl disable panamax.service
-   sudo rm /etc/systemd/system/panamax.service
-   sudo rm /etc/systemd/user/*
-   if [[ `docker ps -a -q`  != ""  ]]; then
+function cleanupCoreOS {
+    echo "Uninstalling Panamax."
+    sudo systemctl stop panamax.service
+    sudo systemctl disable panamax.service
+    sudo rm /etc/systemd/system/panamax.service
+    sudo rm /etc/systemd/user/*
+    if [[ `docker ps -a -q`  != ""  ]]; then
     echo Found some containers, deleting them.
     sudo docker rm -f `docker ps -a -q`
     if [[ "$operation" == "reinstall" ]]; then
         sudo docker rmi `docker images -q`
      fi
-   fi
+    fi
+}
+
+function installPanamax {
+ if [[ "$operation" == "reinstall" ]]; then
+    cleanupCoreOS
  fi
 
  echo "Installing Panamax..."
@@ -63,11 +67,10 @@ function stopPanamax {
 
 function updatePanamax {
     echo Updating Panamax
-    docker ps -a
+    cleanupCoreOS
+    cd scripts && sudo ./start_svc.sh $operation --$IMAGE_TAG
+    cd ..
     installPanamax
-    docker ps -a
-    cd /etc/systemd/user && sudo ./start_svc.sh $operation --$IMAGE_TAG
-    docker ps -a
     echo Panamax Updated
 }
 function waitUntilStarted {

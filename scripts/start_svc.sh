@@ -94,12 +94,9 @@ function updatePmx {
     #stopPmx
     #TODO: Once db migration is implemented, we dont need to delete existing apps.
     cleanupCoreOSContainers
-    echo `docker ps -a`
     docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
     docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
-    echo Starting Panamax with updated images.
-    startPmx
-    echo Update Complete....
+    echo Panamax Update Complete....
 }
 
 function cleanupCoreOSContainers {
