@@ -227,7 +227,7 @@ function updatePanamax {
     setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
     source .env
     checkForPanamaxUpdate
-    if [[ $updateAvailableForPmx == "0" ]]; then
+    if [[ $updateAvailableForPmx == "1" ]]; then
         echo Updating Panamax
         vagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
         openPanamax;
