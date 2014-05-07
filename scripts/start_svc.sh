@@ -9,7 +9,7 @@ IMAGE_UI=panamax-ui
 COREOS_ENDPOINT="http://172.17.42.1"
 IMAGE_TAG=latest
 
-RUN_API="/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 "
+RUN_API="/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/panamax-data:/var/app/panamax-api/db/mnt -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 "
 RUN_UI="/usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 "
 
 function startCoreOSServices {
@@ -49,10 +49,6 @@ function buildPmxImages {
 }
 
 function startPmx {
-    docker ps -a
-    docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API
-    docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI
-
     if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API` == "" ]]; then
         echo "No Container....building."
         echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
@@ -89,14 +85,11 @@ function stopPmx {
     echo Stopped panamax conatiners
 }
 
-function updatePmx {
+function updatePmxImages {
     echo Updating Panamax...!!!
-    #stopPmx
-    #TODO: Once db migration is implemented, we dont need to delete existing apps.
-    cleanupCoreOSContainers
     docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
     docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
-    echo Panamax Update Complete....
+    echo Panamax Image Update Complete....
 }
 
 function cleanupCoreOSContainers {
