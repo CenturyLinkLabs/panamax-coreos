@@ -1,0 +1,13 @@
+[Unit]
+Description=Panamax local
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=
+ExecStop=
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

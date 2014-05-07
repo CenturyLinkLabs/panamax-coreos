@@ -1,0 +1,160 @@
+#! /bin/bash
+
+IMAGE_TAG=stable
+
+function cleanupCoreOS {
+    echo "Uninstalling Panamax."
+    sudo systemctl stop panamax.service
+    sudo systemctl disable panamax.service
+    sudo rm /etc/systemd/system/panamax.service
+    sudo rm /etc/systemd/user/*
+    if [[ `docker ps -a -q`  != ""  ]]; then
+    echo Found some containers, deleting them.
+    sudo docker rm -f `docker ps -a -q`
+    if [[ "$operation" == "reinstall" ]]; then
+        sudo docker rmi `docker images -q`
+     fi
+    fi
+}
+
+function installPanamax {
+ if [[ "$operation" == "reinstall" ]]; then
+    cleanupCoreOS
+ fi
+
+ echo "Installing Panamax..."
+ writeUnitFile
+ sudo cp units/* /etc/systemd/system/
+ sudo cp scripts/* /etc/systemd/user/
+
+ sudo systemctl enable panamax.service
+ sudo systemctl start panamax.service &
+
+ echo "Waiting until Panamax is reassembled"
+ waitUntilStarted
+ echo "Panamax reassembly complete"
+}
+
+function writeUnitFile {
+ echo "[Unit]
+      Description=Panamax local
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh install --$IMAGE_TAG && exit 0'
+      ExecStop=/bin/bash -c '/etc/systemd/user/start_svc.sh stop'
+      RemainAfterExit=true
+
+      [Install]
+      WantedBy=multi-user.target" > units/panamax.service
+}
+
+function restartPanamax {
+  echo "Restarting Panamax"
+  sudo systemctl stop panamax.service
+  sudo systemctl start panamax.service
+  waitUntilStarted
+  echo "Panamax restarted"
+}
+
+function stopPanamax {
+  echo Stopping Panamax
+  sudo systemctl stop panamax.service
+  echo Panamax Stopped.
+}
+
+function updatePanamax {
+    echo Updating Panamax
+    cleanupCoreOS
+    cd scripts && sudo ./start_svc.sh $operation --$IMAGE_TAG
+    cd ..
+    installPanamax
+    echo Panamax Updated
+}
+function waitUntilStarted {
+     logStartTime="`date +'%Y-%m-%d %H:%M:%S'`"
+    echo "$logStartTime"
+    regex='Panamax setup complete'
+    journalctl -u panamax.service --since="$logStartTime" -f | while read line; do
+       echo $line
+       if [[ $line == *$regex* ]]; then
+         pkill -9 -P $$ journalctl
+       fi
+    done
+}
+
+function showHelp {
+    echo ""
+    echo "Usage:
+         ./setup.sh <install/reinstall/restart/stop>
+         ./setup.sh "
+    echo ""
+}
+
+function readParams {
+    for i in "$@"
+    do
+    case $i in
+        --dev)
+        IMAGE_TAG=dev
+        ;;
+        --stable)
+        IMAGE_TAG=stable
+        ;;
+        install)
+        operation=install
+        ;;
+        reinstall)
+        operation=reinstall
+        ;;
+        uninstall)
+        operation=uninstall
+        ;;
+        stop)
+        operation=stop
+        ;;
+        start)
+        operation=restart
+        ;;
+        restart)
+        operation=restart
+        ;;
+        update)
+        operation=update
+        ;;
+        *)
+        exit 1;
+        ;;
+    esac
+    done
+}
+
+function main {
+    readParams "$@"
+    if [[ $# -gt 0 ]]; then
+        case $operation in
+            install) installPanamax && exit 0 || { showHelp; exit 1; } ;;
+            reinstall) installPanamax && exit 0 || { showHelp; exit 1; } ;;
+            restart) restartPanamax || { showHelp; exit 1; } ;;
+            stop) stopPanamax || { showHelp; exit 1; } ;;
+            update) updatePanamax || { showHelp; exit 1; } ;;
+            *) showHelp;;
+        esac
+    else
+        echo "Please select one of the following options: "
+        select operation in "install" "restart" "reinstall" "update"; do
+        case $operation in
+            install) installPanamax && exit 0; break;;
+            reinstall   ) installPanamax && exit 0; break;;
+            restart) restartPanamax; break;;
+            stop) stopPanamax; break;;
+            update) updatePanamax; break;;
+        esac
+        done
+    fi
+}
+
+main "$@";
+
