@@ -9,7 +9,7 @@ IMAGE_UI=panamax-ui
 COREOS_ENDPOINT="http://172.17.42.1"
 IMAGE_TAG=latest
 
-RUN_API="/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 "
+RUN_API="/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/panamax-data:/var/app/panamax-api/db/mnt  -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 "
 RUN_UI="/usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 "
 
 function startCoreOSServices {
