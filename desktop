@@ -321,7 +321,7 @@ function main {
     local install="Install:  First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
     local restart="Restart:  Stops and Starts Panamax."
     local reinstall="Reinstall:  Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
-    local update="Update:  Updates to latest Panamax version. Applications are deleted in this process."
+    local update="Update:  Updates to latest Panamax version."
     local checkUpdate="Check for updates: Checks availability of updates for Panamax."
     local stop="Stop:  Stops Panamax"
     local start="Start:  Starts Panamax"
