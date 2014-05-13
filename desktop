@@ -2,7 +2,7 @@
 
 PANAMAX_PORT_UI=8888
 PANAMAX_PORT_API=8889
-BASEBOX=coreos-alpha
+BASEBOX=coreos-beta
 IMAGE_TAG_DEFAULT=stable
 pmxUiTags="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
