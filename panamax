@@ -310,14 +310,14 @@ function main {
     source .env
     displayLogo
 
-    local install="Init:  First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
-    local restart="Restart:  Stops and Starts Panamax."
-    local reinstall="Reinstall:  Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
-    local update="Download:  Updates to latest Panamax version."
-    local checkUpdate="Info: Checks availability of updates for Panamax."
-    local stop="Pause:  Stops Panamax"
-    local start="Up:  Starts Panamax"
-    local uninstall="Delete:  Deletes applications and CoreOS VM."
+    local install="init:  First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
+    local restart="restart:  Stops and Starts Panamax."
+    local reinstall="reinstall:  Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
+    local update="download:  Updates to latest Panamax version."
+    local checkUpdate="info: Checks for available updates for Panamax."
+    local stop="pause:  Stops Panamax"
+    local start="up:  Starts Panamax"
+    local uninstall="delete:  Uninstalls Panamax, deletes applications and CoreOS VM."
 
     checkPreReqs;
     readParams "$@"
