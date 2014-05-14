@@ -4,10 +4,11 @@
 Vagrant.configure("2") do |config|
   Vagrant.require_version ">= 1.5.0"
   config.vm.box = ENV['BASEBOX'] || "coreos-beta"
-  config.vm.box_url = "http://storage.core-os.net/coreos/amd64-usr/beta/coreos_production_vagrant.box"
+  config.vm.box_url = "http://storage.core-os.net/coreos/amd64-usr/310.1.0/coreos_production_vagrant.box"
 
   config.vm.network "forwarded_port", guest: 3000, host: Integer(ENV['PANAMAX_PORT_UI']||8888)
   config.vm.network "forwarded_port", guest: 3001, host: Integer(ENV['PANAMAX_PORT_API']||8889)
+  config.vm.network "forwarded_port", guest: 8080, host: 8997
   # Fix docker not being able to resolve private registry in VirtualBox
   config.vm.provider :virtualbox do |vb, override|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]

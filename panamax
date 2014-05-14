@@ -171,16 +171,16 @@ function installPanamax {
 	if [[ "$#" == "0" ]]; then
 	    read -p "Would you like to re-download coreos base box(N): " redownload
 	fi
-        vagrant destroy -f || { "VM Destroy failed. Exiting." exit 1; }
+        vagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
         if [[ $redownload == "Y" ]]; then
-            vagrant box update --box $BASEBOX || { "Vagrant box remove failed. Exiting." exit 1; }
+            vagrant box update --box $BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
         else
-        vagrant up || { "VM Creation failed. Exiting." exit 1; }
+        vagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
         fi
     else
 	echo ""
 	echo "Creating a new vagrant machine"
-	vagrant up || { "VM Creation failed. Exiting." exit 1; }
+	vagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
     fi
 
     openPanamax;
@@ -247,15 +247,7 @@ function uninstallPanamax {
 
 function showHelp {
     echo ""
-    echo "Usage:
-	 ./desktop install/-op=install [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>]
-	 ./desktop reinstall/-op=reinstall [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>]
-	 ./desktop restart/-op=restart
-     ./desktop start/-op=start
-     ./desktop stop/-op=stop
-     ./desktop uninstall/-op=uninstall
-     ./desktop status/-op=status
-     ./desktop "
+    echo "./panamax {init|up|pause|restart|download|info|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable]"
     echo ""
 }
 
@@ -270,25 +262,25 @@ function readParams {
         --stable)
         IMAGE_TAG=stable
         ;;
-        install)
+        install|init)
         operation=install
         ;;
-        uninstall)
+        uninstall|delete)
         operation=uninstall
         ;;
-        stop)
+        stop|pause)
         operation=stop
         ;;
-        start)
+        start|up)
         operation=restart
         ;;
         restart)
         operation=restart
         ;;
-        update)
+        update|download)
         operation=update
         ;;
-        check)
+        check|info)
         operation=check
         ;;
         reinstall)
@@ -318,14 +310,14 @@ function main {
     source .env
     displayLogo
 
-    local install="Install:  First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
+    local install="Init:  First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
     local restart="Restart:  Stops and Starts Panamax."
     local reinstall="Reinstall:  Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
-    local update="Update:  Updates to latest Panamax version."
-    local checkUpdate="Check for updates: Checks availability of updates for Panamax."
-    local stop="Stop:  Stops Panamax"
-    local start="Start:  Starts Panamax"
-    local uninstall="Uninstall:  Deletes applications and CoreOS VM."
+    local update="Download:  Updates to latest Panamax version."
+    local checkUpdate="Info: Checks availability of updates for Panamax."
+    local stop="Pause:  Stops Panamax"
+    local start="Up:  Starts Panamax"
+    local uninstall="Delete:  Deletes applications and CoreOS VM."
 
     checkPreReqs;
     readParams "$@"
