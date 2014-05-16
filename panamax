@@ -244,6 +244,10 @@ function uninstallPanamax {
   echo Uninstall complete.
 }
 
+function sshToPanamax {
+ runVagrant ssh
+}
+
 function showHelp {
     echo ""
     echo "./panamax {init|up|pause|restart|download|info|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable]"
@@ -284,6 +288,9 @@ function readParams {
         ;;
         reinstall)
         operation=reinstall
+        ;;
+        ssh)
+        operation=ssh
         ;;
         -op=*|--operation=*)
         operation="${i#*=}"
@@ -331,12 +338,13 @@ function main {
             check)checkForUpdate "u";;
             update) updatePanamax;;
             uninstall) uninstallPanamax;;
+            ssh) sshToPanamax;;
             *) showHelp;;
         esac
 	
     else
         echo "Please select one of the following options: "
-        select operation in "$install" "$stop" "$start" "$restart" "$reinstall" "$checkUpdate" "$update" "$uninstall"; do
+        select operation in "$install" "$stop" "$start" "$restart" "$reinstall" "$checkUpdate" "$update" "$uninstall" "ssh"; do
         case $operation in
             "$install") operation="install";  installPanamax; break;;
             "$reinstall") operation="reinstall"; installPanamax; break;;
@@ -346,6 +354,7 @@ function main {
             "$checkUpdate") operation="check"; checkForUpdate "u"; break;;
             "$update") operation="update"; updatePanamax; break;;
             "$uninstall") operation="uninstall"; uninstallPanamax; break;;
+            ssh) sshToPanamax;;
         esac
         done
     fi
