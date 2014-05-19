@@ -212,7 +212,9 @@ function installPanamax {
 }
 
 function setEnvVar {
-    echo $"`sed  "/$1/d" $env`" > $env
+    if [[ -f $env ]]; then
+        echo $"`sed  "/$1/d" $env`" > $env
+    fi
     echo export $1=$2 >> $env
 }
 
