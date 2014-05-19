@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   Vagrant.require_version ">= 1.5.0"
   config.vm.box = ENV['BASEBOX'] || "panamax-coreos-box"
   config.vm.box_url = ENV['BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/310.1.0/coreos_production_vagrant.box"
-  config.vm.hostname = "panamax-vm"
+  config.vm.hostname = ENV['PMX_VM_NAME'] || "panamax-vm"
 
   config.vm.network "forwarded_port", guest: 3000, host: Integer(ENV['PANAMAX_PORT_UI']||8888)
   config.vm.network "forwarded_port", guest: 3001, host: Integer(ENV['PANAMAX_PORT_API']||8889)
@@ -14,8 +14,9 @@ Vagrant.configure("2") do |config|
   config.vm.provider :virtualbox do |vb, override|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-    vb.name = "panamax-vm"
+    vb.name = ENV['PMX_VM_NAME'] || "panamax-vm"
   end
+  config.vm.define :ENV['PMX_VM_NAME'] || "panamax-vm"
 
   # plugin conflict
   if Vagrant.has_plugin?("vagrant-vbguest") then
