@@ -199,7 +199,7 @@ function installPanamax {
             runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
         fi
     else
-        if [[ "`vagrant status panamax-vm --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
+        if [[ "`runVagrant status panamax-vm --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
             echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
             exit 1;
         fi
