@@ -43,7 +43,7 @@ function writeUnitFile {
 
       [Service]
       Type=oneshot
-      ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh install --$IMAGE_TAG && exit 0'
+      ExecStart=/bin/bash -c '/etc/systemd/user/start_svc.sh install -pid="$PANAMAX_ID" --$IMAGE_TAG && exit 0'
       ExecStop=/bin/bash -c '/etc/systemd/user/start_svc.sh stop'
       RemainAfterExit=true
 
@@ -68,7 +68,7 @@ function stopPanamax {
 function updatePanamax {
     echo Updating Panamax
     cleanupCoreOS
-    cd scripts && sudo ./start_svc.sh $operation --$IMAGE_TAG
+    cd scripts && sudo ./start_svc.sh $operation -pid="$PANAMAX_ID" --$IMAGE_TAG
     cd ..
     installPanamax
     echo Panamax Updated
@@ -123,6 +123,9 @@ function readParams {
         ;;
         update)
         operation=update
+        ;;
+        -pid=*)
+        PANAMAX_ID="${i#*=}"
         ;;
         *)
         exit 1;
