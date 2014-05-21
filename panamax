@@ -184,6 +184,9 @@ function installPanamax {
     setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
     setEnvVar "OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
+    if [[ "$PANAMAX_ID" == "" ]]; then
+       setEnvVar "PANAMAX_ID" "\"`uuidgen`\""
+    fi
     source $env
 
     if [[  $operation == "reinstall" ]]; then
@@ -203,11 +206,9 @@ function installPanamax {
             echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
             exit 1;
         fi
-            setEnvVar "PANAMAX_ID" "\"`uuidgen`\""
-            source $env
-	    echo ""
-	    echo "Creating a new vagrant machine"
-	    runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
+	echo ""
+	echo "Creating a new vagrant machine"
+	runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
     fi
 
     openPanamax;
