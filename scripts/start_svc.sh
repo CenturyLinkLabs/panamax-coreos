@@ -9,9 +9,6 @@ IMAGE_UI=panamax-ui
 COREOS_ENDPOINT="http://172.17.42.1"
 IMAGE_TAG=latest
 
-RUN_API="/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/panamax-data:/var/app/panamax-api/db/mnt -v /var/run/docker.sock:/run/docker.sock:rw  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 "
-RUN_UI="/usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 "
-
 function startCoreOSServices {
    sudo systemctl stop update-engine-reboot-manager.service
    sudo systemctl mask update-engine-reboot-manager.service
@@ -48,10 +45,18 @@ function buildPmxImages {
     docker rm `docker ps -a | grep -v -e Up | grep ago | awk '{print $1}'`
 }
 
+function getRunCmdAPI {
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/panamax-data:/var/app/panamax-api/db/mnt -v /var/run/docker.sock:/run/docker.sock:rw -e PANAMAX_ID="$PANAMAX_ID"  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -d -t  -p 3001:3000 " $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
+}
+
+function getRunCmdUI {
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_API:PMX_API   -d  -p 3000:3000 " $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
+}
+
 function startPmx {
     if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API` == "" ]]; then
         echo "No Container....building."
-        echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
+        $(getRunCmdAPI)
     else
         echo "API Container Found....Trying restart..."
         docker restart $CONTAINER_NAME_API
@@ -59,13 +64,13 @@ function startPmx {
         if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -i exit` != "" ]]; then
             echo "Dead Container....rebuilding."
             docker rm -f $CONTAINER_NAME_API
-            echo `$RUN_API $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG`
+           $(getRunCmdAPI)
         fi
     fi
 
     if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI` == "" ]]; then
-        echo "No Container....building."
-       echo `$RUN_UI $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG`
+       echo "No Container....building."
+       $(getRunCmdUI)
     else
         echo "UI Container Found....Trying restart..."
         docker restart $CONTAINER_NAME_UI
@@ -73,7 +78,7 @@ function startPmx {
         if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -i exit` != "" ]]; then
             echo "Dead Container....rebuilding."
             docker rm -f $CONTAINER_NAME_UI
-            echo `$RUN_UI $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG`
+            $(getRunCmdUI)
         fi
     fi
 }
@@ -137,6 +142,9 @@ function readParams {
         ;;
         update)
         operation=update
+        ;;
+        -pid=*)
+        PANAMAX_ID="${i#*=}"
         ;;
         *)
         exit 1;
