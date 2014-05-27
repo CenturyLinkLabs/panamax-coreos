@@ -2,8 +2,8 @@
 
 PANAMAX_PORT_UI=8888
 PANAMAX_PORT_API=8889
-BASEBOX="panamax-coreos-box-324"
-BASEBOX_URL="http://storage.core-os.net/coreos/amd64-usr/324.0.0/coreos_production_vagrant.box"
+BASEBOX_DEFAULT="panamax-coreos-box-324"
+BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/324.0.0/coreos_production_vagrant.box"
 IMAGE_TAG_DEFAULT=stable
 pmxUiTags="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
@@ -173,8 +173,8 @@ function installPanamax {
 
     setEnvVar "PANAMAX_PORT_UI" $panamaxPortUi
     setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
-    setEnvVar "BASEBOX" $BASEBOX
-    setEnvVar "BASEBOX_URL" $BASEBOX_URL
+    setEnvVar "BASEBOX" $BASEBOX_DEFAULT
+    setEnvVar "BASEBOX_URL" $BASEBOX_URL_DEFAULT
     setEnvVar "SETUP_VERSION" "\"$(<$CWD\.version)\""
     setEnvVar "INSTALL_DATE" "\"`date +%s`\""
     if [[ "$IMAGE_TAG" == "stable" ]]; then
@@ -215,9 +215,7 @@ function installPanamax {
 }
 
 function setEnvVar {
-    if [[ -f $env ]]; then
-        echo $"`sed  "/$1/d" $env`" > $env
-    fi
+    echo $"`sed  "/$1=/d" $env`" > $env
     echo export $1=$2 >> $env
 }
 
@@ -365,6 +363,8 @@ function readParams {
 function main {
     if [[ -f $env ]]; then
         source $env
+    else
+        touch $env
     fi
     displayLogo
     checkPreReqs;
