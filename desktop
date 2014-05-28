@@ -1,0 +1,411 @@
+#! /bin/bash
+
+PANAMAX_PORT_UI=8888
+PANAMAX_PORT_API=8889
+BASEBOX_DEFAULT="panamax-coreos-box-324"
+BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/324.0.0/coreos_production_vagrant.box"
+IMAGE_TAG_DEFAULT=stable
+pmxUiTags="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
+pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
+setupUpdateUrl="http://63.128.180.11/installer/"
+CWD="${HOME}/.panamax/"
+env=$CWD.env
+PMX_VM_NAME="panamax-vm"
+
+echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
+echo_restart="restart:       Stops and Starts Panamax."
+echo_reinstall="reinstall:     Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
+echo_update="download:      Updates to latest Panamax version."
+echo_checkUpdate="checkupdate:   Checks for available updates for Panamax."
+echo_info="info:          Displays version of your local panamax install."
+echo_stop="pause:         Stops Panamax"
+echo_start="up:            Starts Panamax"
+echo_uninstall="delete:        Uninstalls Panamax, deletes applications and CoreOS VM."
+echo_ssh="ssh:           Ssh into Panamax CoreOS VM."
+echo_help="help:          Show this help"
+
+function displayLogo {
+tput clear
+
+echo ""
+echo -e "\033[30;90m███████╗ ██████╗  █████████╗ ██████╗ \033[0m\033[30;31m ██████████╗ ██████╗  ██╗  ██╗\033[0m"
+echo -e "\033[30;90m██╔══██║  ╚═══██╗ ███╗  ███║  ╚═══██╗\033[0m\033[30;31m ██║ ██╔ ██║  ╚═══██╗ ╚██╗██╔╝\033[0m"
+echo -e "\033[30;90m██   ██║ ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║  ╚███╔╝ \033[0m"
+echo -e "\033[30;90m███████╝ ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║  ██╔██╗ \033[0m"
+echo -e "\033[30;90m██║      ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║ ██╔╝ ██╗\033[0m"
+echo -e "\033[30;90m╚═╝      ╚══════╝ ╚══╝  ╚══╝ ╚══════╝\033[0m\033[30;31m ╚═╝ ╚═╝ ╚═╝ ╚══════╝ ╚═╝  ╚═╝\033[0m"
+echo ""
+echo "CenturyLink Labs - http://www.centurylinklabs.com/"
+}
+
+function checkPreReqs {
+    echo ""
+    echo "Checking if required software is installed."
+    echo ""
+
+    vagrant -v | grep "1.5" 2>&1 >/dev/null
+    if [[ "$?" -ne "0" ]]; then
+	    echo "Please install vagrant version 1.5 or newer (https://www.vagrantup.com/downloads.html).";
+	    exit 1;
+    else
+	    echo $'Vagrant 1.5 or newer installed.'
+    fi
+
+    virtualbox --help 2>&1 >/dev/null
+    if [[ "$?" -ne "0" ]]; then
+        echo "Please install Virtualbox (https://www.virtualbox.org/wiki/Downloads).";
+        exit 1;
+    else
+    	echo $'Virtualbox 4.2 or newer installed.'
+    fi
+    echo ""
+}
+
+function checkForSetupUpdate {
+    if [[ "$checkedSetupForUpdates" != "1" || "$1" == "u" ]]; then
+        checkedSetupForUpdates="1"
+        updateAvailableForSetup="0"
+        if [[ -f $env ]]; then
+            source $env
+            majVer=`echo $SETUP_VERSION | awk -F "." '{ print $1 }'`
+            minVer=`echo $SETUP_VERSION | awk -F "." '{ print $2 }'`
+            patVer=`echo $SETUP_VERSION | awk -F "." '{ print $3 }'`
+
+            nextMinVer=`echo $minVer + 1 | bc`
+            nextMajVer=`echo $majVer + 1 | bc`
+            nextPatVer=`echo $patVer + 1 | bc`
+
+            versionList=`curl -sL $setupUpdateUrl | grep zip`
+            if [[ "`echo $versionList | grep "$majVer.$minVer.$nextPatVer"`" != "" || "`echo $versionList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" || "`echo $versionList | grep "$nextMajVer.[0-9]\+.[0-9]\+"`" != "" ]]; then
+              echo "Local Panamax Installer version:"
+              echo "$SETUP_VERSION"
+              echo ""
+              echo "*** Panamax Installer is out of date! Please visit ($setupUpdateUrl) to update. ***"
+              updateAvailableForSetup="1"
+            elif [[ "$1" == "e" ]]; then
+              echo "Local Panamax Installer version:"
+              echo "  $SETUP_VERSION"
+              echo ""
+            fi
+        else
+            echo ""
+        fi
+    fi
+}
+
+function checkForPanamaxUpdate {
+   if [[ "$checkedPmxForUpdates" != "1" || "$1" == "u" ]]; then
+       checkedPmxForUpdates="1"
+       updateAvailableForPmx="0"
+       if [[ -f $env ]]; then
+        source $env
+        if [[ "$IMAGE_TAG" == "dev" ]]; then
+            if [[ "$INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
+                echo "You are currently running a Dev version of Panamax which is updated nightly."
+                echo "A newer Dev version is available. Use the update option to get the latest Dev version."
+            fi
+        elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" || "$1" == "e" ]]; then
+            latestTagApi=$(getLatestTagApi)
+            latestTagUi=$(getLatestTagUi)
+            if [[ "$INSTALL_TAG_UI" < "$latestTagUi" || "$INSTALL_TAG_API" < "$latestTagApi" ]]; then
+                echo "Local Panamax component versions:"
+                echo "   UI: $INSTALL_TAG_UI"
+                echo "  API: $INSTALL_TAG_API"
+                echo "Latest Panamax component versions:"
+                echo "   UI: $latestTagUi"
+                echo "  API: $latestTagApi"
+                echo ""
+                echo "*** Panamax is out of date! Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) . ***"
+                echo ""
+                updateAvailableForPmx="1"
+            elif [[ "$1" == "e" ]]; then
+                echo "Local Panamax component versions:"
+                echo "   UI: $INSTALL_TAG_UI"
+                echo "  API: $INSTALL_TAG_API"
+            fi
+        fi
+      else
+        echo ""
+      fi
+   fi
+}
+
+function checkForUpdate {
+    echo ""
+    checkForPanamaxUpdate "$1"
+    checkForSetupUpdate "$1"
+    if [[ "$1" == "u" && $updateAvailableForSetup == "0" && $updateAvailableForPmx == "0" ]]; then
+        echo "Panamax is already up to date!"
+    fi
+    echo ""
+}
+
+function getLatestTagUi {
+    echo `curl -silent $pmxUiTags  | grep '"[0-9]\+.[0-9]\+.[0-9]\+"' | awk '{ gsub(/[",:]/,"")} 1' | awk '{ print $1}' | awk 'END{print}'`
+}
+
+function getLatestTagApi {
+    echo `curl -silent $pmxApiTags  | grep '"[0-9]\+.[0-9]\+.[0-9]\+"' | awk '{ gsub(/[",:]/,"")} 1' | awk '{ print $1}' | awk 'END{print}'`
+}
+
+function runVagrant {
+   cd $CWD && vagrant "$@"
+}
+
+function installPanamax {
+    if [[ $# == 0 ]]; then
+        echo ""
+        read -p "Enter default UI port($PANAMAX_PORT_UI):"  panamaxPortUi
+        read -p "Enter default API port($PANAMAX_PORT_API):"  panamaxPortApi
+        read -p "Enter version you want to use(dev/stable, defaults to:$IMAGE_TAG_DEFAULT)" panamaxVersion
+        echo ""
+    fi
+
+    panamaxPortUi=${panamaxPortUi:-$PANAMAX_PORT_UI}
+    panamaxPortApi=${panamaxPortApi:-$PANAMAX_PORT_API}
+    redownload=${download:-N}
+    IMAGE_TAG=${panamaxVersion:-${IMAGE_TAG:-$IMAGE_TAG_DEFAULT}}
+
+    if [ ! -d "$CWD" ]; then
+        mkdir -p $CWD
+        cp -Rf . $CWD > /dev/null
+    fi
+
+    setEnvVar "PANAMAX_PORT_UI" $panamaxPortUi
+    setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
+    setEnvVar "BASEBOX" $BASEBOX_DEFAULT
+    setEnvVar "BASEBOX_URL" $BASEBOX_URL_DEFAULT
+    setEnvVar "SETUP_VERSION" "\"$(<$CWD\.version)\""
+    setEnvVar "INSTALL_DATE" "\"`date +%s`\""
+    if [[ "$IMAGE_TAG" == "stable" ]]; then
+        setEnvVar "INSTALL_TAG_UI" "\"$(getLatestTagUi)\""
+        setEnvVar "INSTALL_TAG_API" "\"$(getLatestTagApi)\""
+    fi
+    setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
+    setEnvVar "OPERATION" "$operation"
+    setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
+    if [[ "$PANAMAX_ID" == "" ]]; then
+       setEnvVar "PANAMAX_ID" "\"`uuidgen`\""
+    fi
+    source $env
+
+    if [[  $operation == "reinstall" ]]; then
+        echo ""
+        echo "Reinstalling the vagrant machine"
+	    if [[ "$#" == "0" ]]; then
+	        read -p "Would you like to re-download coreos base box(N): " redownload
+	    fi
+        runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
+        if [[ $redownload == "Y" ]]; then
+            vagrant box update --box $BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
+        else
+            runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
+        fi
+    else
+        if [[ "`runVagrant status panamax-vm --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
+            echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
+            exit 1;
+        fi
+	echo ""
+	echo "Creating a new vagrant machine"
+	runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
+    fi
+
+    openPanamax;
+}
+
+function setEnvVar {
+    echo $"`sed  "/$1=/d" $env`" > $env
+    echo export $1=$2 >> $env
+}
+
+function openPanamax {
+    echo "waiting for panamax to start....."
+    until [ `curl -sL -w "%{http_code}" "http://localhost:$PANAMAX_PORT_UI"  -o /dev/null` == "200" ];
+    do
+      printf .
+      sleep 2
+    done
+
+    echo ""
+    open "http://localhost:$PANAMAX_PORT_UI" || { echo "Please goto http://localhost:$PANAMAX_PORT_UI"; }
+    echo ""
+    echo ""
+}
+
+function restartPanamax {
+    echo Restarting Panamax
+    setEnvVar "OPERATION" "$operation"
+    source $env
+    runVagrant reload || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+    openPanamax;
+    echo Restart complete
+}
+
+function startPanamax {
+    echo Starting Panamax
+    setEnvVar "OPERATION" "$operation"
+    source $env
+    runVagrant up || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
+    openPanamax
+    echo Start Complete
+}
+function stopPanamax {
+    echo Stopping Panamax
+    setEnvVar "OPERATION" "$operation"
+    source $env
+    runVagrant halt || { echo >&2 "Stopping Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+    echo Panamax stopped.
+}
+
+function updatePanamax {
+    setEnvVar "OPERATION" "$operation"
+    setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
+    source $env
+    checkForPanamaxUpdate
+    if [[ $updateAvailableForPmx == "1" ]]; then
+        echo Updating Panamax
+        runVagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+        openPanamax;
+        echo Update Complete
+    else
+        echo "Panamax is already up to date."
+    fi
+}
+function uninstallPanamax {
+  setEnvVar "OPERATION" "$operation"
+  echo Uninstalling Panamax
+  vagrant box remove $BASEBOX
+  runVagrant destroy -f
+  echo Uninstall complete.
+}
+
+function sshToPanamax {
+ runVagrant ssh
+}
+
+function showShortHelp {
+    echo ""
+    echo "./panamax {init|up|pause|restart|info|checkupdate|download|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable]"
+    echo ""
+}
+
+function showLongHelp {
+    echo ""
+    echo $'\n' $'\n' "$echo_install" $'\n' "$echo_stop" $'\n' "$echo_start" $'\n' "$echo_restart" $'\n' "$echo_reinstall" $'\n' "$echo_info" $'\n' "$echo_checkUpdate" $'\n' "$echo_update" $'\n' "$echo_uninstall" $'\n' "$echo_ssh" $'\n' "$echo_help"
+    echo ""
+}
+
+function readParams {
+    for i in "$@"
+    do
+    case `echo $i | tr '[:upper:]' '[:lower:]'` in
+        --dev)
+        IMAGE_TAG=dev
+        ;;
+        --stable)
+        IMAGE_TAG=stable
+        ;;
+        install|init)
+        operation=install
+        ;;
+        uninstall|delete)
+        operation=uninstall
+        ;;
+        stop|pause)
+        operation=stop
+        ;;
+        start|up)
+        operation=start
+        ;;
+        restart)
+        operation=restart
+        ;;
+        update|download)
+        operation=update
+        ;;
+        check)
+        operation=check
+        ;;
+        info|--version|-v)
+        operation=info
+        ;;
+        reinstall)
+        operation=reinstall
+        ;;
+        ssh)
+        operation=ssh
+        ;;
+        -op=*|--operation=*)
+        operation="${i#*=}"
+        ;;
+        -ppui=*|--panamaxportui=*)
+        panamaxPortUi="${i#*=}"
+        ;;
+        -ppapi=*|--panamaxportapi=*)
+        panamaxPortApi="${i#*=}"
+        ;;
+        -vd=*|--vagrantdownload=*)
+        download="${i#*=}"
+        ;;
+        --help|-h)
+        showLongHelp;
+        exit 1;
+        ;;
+        *)
+        showLongHelp;
+        exit 1;
+        ;;
+    esac
+    done
+}
+
+function main {
+    if [[ -f $env ]]; then
+        source $env
+    else
+        touch $env
+    fi
+    displayLogo
+    checkPreReqs;
+    readParams "$@"
+
+    if [[ $# -gt 0 ]]; then
+        case $operation in
+            install)   installPanamax "$@" || { showHelp; exit 1; } ;;
+            reinstall)   installPanamax "$@" || { showHelp; exit 1; } ;;
+            restart) restartPanamax;;
+            stop) stopPanamax;;
+            start) startPanamax;;
+            check)checkForUpdate "u";;
+            info)checkForUpdate "e";;
+            update) updatePanamax;;
+            uninstall) uninstallPanamax;;
+            ssh) sshToPanamax;;
+            *) showLongHelp;;
+        esac
+	
+    else
+        echo "Please select one of the following options: "
+        select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
+        case $operation in
+            "$echo_install") operation="install";  installPanamax; break;;
+            "$echo_reinstall") operation="reinstall"; installPanamax; break;;
+            "$echo_restart") operation="restart"; restartPanamax; break;;
+            "$echo_start") operation="start"; startPanamax; break;;
+            "$echo_stop") operation="stop"; stopPanamax; break;;
+            "$echo_checkUpdate") operation="check"; checkForUpdate "u"; break;;
+            "$echo_info")operation="info"; checkForUpdate "e"; break;;
+            "$echo_update") operation="update"; updatePanamax; break;;
+            "$echo_uninstall") operation="uninstall"; uninstallPanamax; break;;
+            "$echo_help")showLongHelp; break;;
+            "$echo_ssh") sshToPanamax;;
+            quit) exit 0;;
+        esac
+        done
+    fi
+    checkForUpdate
+    exit 0;
+}
+
+main "$@";
