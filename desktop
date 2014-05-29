@@ -43,7 +43,7 @@ function checkPreReqs {
     echo "Checking if required software is installed."
     echo ""
 
-    vagrant -v | grep "1.5" 2>&1 >/dev/null
+    vagrant -v | grep -w '1.[5-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
 	    echo "Please install vagrant version 1.5 or newer (https://www.vagrantup.com/downloads.html).";
 	    exit 1;
