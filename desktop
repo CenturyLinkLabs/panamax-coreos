@@ -103,6 +103,7 @@ function checkForPanamaxUpdate {
             if [[ "$INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
                 echo "You are currently running a Dev version of Panamax which is updated nightly."
                 echo "A newer Dev version is available. Use the update option to get the latest Dev version."
+                updateAvailableForPmx="1"
             fi
         elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" || "$1" == "e" ]]; then
             latestTagApi=$(getLatestTagApi)
@@ -152,6 +153,16 @@ function runVagrant {
    cd $CWD && vagrant "$@"
 }
 
+function saveVersionInfo {
+    setEnvVar "SETUP_VERSION" "\"$(<$CWD\.version)\""
+    setEnvVar "INSTALL_DATE" "\"`date +%s`\""
+    if [[ "$IMAGE_TAG" == "stable" ]]; then
+        setEnvVar "INSTALL_TAG_UI" "\"$(getLatestTagUi)\""
+        setEnvVar "INSTALL_TAG_API" "\"$(getLatestTagApi)\""
+    fi
+    setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
+}
+
 function installPanamax {
     if [[ $# == 0 ]]; then
         echo ""
@@ -175,13 +186,7 @@ function installPanamax {
     setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
     setEnvVar "BASEBOX" $BASEBOX_DEFAULT
     setEnvVar "BASEBOX_URL" $BASEBOX_URL_DEFAULT
-    setEnvVar "SETUP_VERSION" "\"$(<$CWD\.version)\""
-    setEnvVar "INSTALL_DATE" "\"`date +%s`\""
-    if [[ "$IMAGE_TAG" == "stable" ]]; then
-        setEnvVar "INSTALL_TAG_UI" "\"$(getLatestTagUi)\""
-        setEnvVar "INSTALL_TAG_API" "\"$(getLatestTagApi)\""
-    fi
-    setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
+    saveVersionInfo
     setEnvVar "OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
     if [[ "$PANAMAX_ID" == "" ]]; then
@@ -267,11 +272,13 @@ function updatePanamax {
         echo Updating Panamax
         runVagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
         openPanamax;
+        saveVersionInfo
         echo Update Complete
     else
         echo "Panamax is already up to date."
     fi
 }
+
 function uninstallPanamax {
   setEnvVar "OPERATION" "$operation"
   echo Uninstalling Panamax
