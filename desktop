@@ -11,6 +11,7 @@ setupUpdateUrl="http://63.128.180.11/installer/"
 CWD="${HOME}/.panamax/"
 env=$CWD.env
 PMX_VM_NAME="panamax-vm"
+PMX_VM_MEMORY=2048
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
 echo_restart="restart:       Stops and Starts Panamax."
@@ -166,12 +167,14 @@ function saveVersionInfo {
 function installPanamax {
     if [[ $# == 0 ]]; then
         echo ""
+        read -p "Enter memory (MB) to be allocated to Panamax VM($PMX_VM_MEMORY):" panamaxRam
         read -p "Enter default UI port($PANAMAX_PORT_UI):"  panamaxPortUi
         read -p "Enter default API port($PANAMAX_PORT_API):"  panamaxPortApi
         read -p "Enter version you want to use(dev/stable, defaults to:$IMAGE_TAG_DEFAULT)" panamaxVersion
         echo ""
     fi
 
+    panamaxRam=${panamaxRam:-$PMX_VM_MEMORY}
     panamaxPortUi=${panamaxPortUi:-$PANAMAX_PORT_UI}
     panamaxPortApi=${panamaxPortApi:-$PANAMAX_PORT_API}
     redownload=${download:-N}
@@ -186,6 +189,7 @@ function installPanamax {
     setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
     setEnvVar "BASEBOX" $BASEBOX_DEFAULT
     setEnvVar "BASEBOX_URL" $BASEBOX_URL_DEFAULT
+    setEnvVar "PANAMAX_MEMORY" $panamaxRam
     saveVersionInfo
     setEnvVar "OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
@@ -312,6 +316,9 @@ function readParams {
         ;;
         --stable)
         IMAGE_TAG=stable
+        ;;
+        --memory=*)
+        panamaxRam="${i#*=}"
         ;;
         install|init)
         operation=install

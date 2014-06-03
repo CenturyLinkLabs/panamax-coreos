@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
     vb.name = ENV['PMX_VM_NAME'] || "panamax-vm"
-    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--memory", Integer(ENV['PANAMAX_MEMORY']||2048)]
   end
   config.vm.define :ENV['PMX_VM_NAME'] || "panamax-vm"
 
