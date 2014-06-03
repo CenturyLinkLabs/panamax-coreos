@@ -30,8 +30,27 @@ function installPanamax {
 
     echo "Installing Panamax..."
     startCoreOSServices
-    /usr/bin/docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
-    /usr/bin/docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
+
+    echo ""
+    echo "docker pull $IMAGE_API:$IMAGE_TAG "
+    /usr/bin/docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG >/dev/null &
+    PID=$!
+    while $(kill -n 0 $PID 2> /dev/null)
+    do
+      echo -n '.'
+      sleep 1
+    done
+
+    echo ""
+    echo "docker pull $IMAGE_UI:$IMAGE_TAG"
+    /usr/bin/docker pull $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG >/dev/null &
+    PID=$!
+    while $(kill -n 0 $PID 2> /dev/null)
+    do
+      echo -n '.'
+      sleep 1
+    done
+
     writeUnitFile
     sudo cp units/* /etc/systemd/system/
     operatePanamax enable
