@@ -50,7 +50,9 @@ function installPanamax {
       echo -n '.'
       sleep 1
     done
+    echo ""
 
+    sudo rm units/panamax*.service
     writeUnitFile
     sudo cp units/* /etc/systemd/system/
     operatePanamax enable
@@ -60,7 +62,7 @@ function installPanamax {
 }
 
 function writeUnitFile {
- sudo echo "[Unit]
+ echo "[Unit]
       Description=Panamax API
       After=docker.service
       Requires=docker.service
@@ -74,7 +76,7 @@ function writeUnitFile {
       [Install]
       WantedBy=multi-user.target" > units/panamax-api.service
 
- sudo echo "[Unit]
+ echo "[Unit]
       Description=Panamax UI
       After=panamax-api.service
       Requires=panamax-api.service
@@ -136,8 +138,8 @@ function waitUntilStarted {
     logStartTime="`date +'%Y-%m-%d %H:%M:%S'`"
     #echo "$logStartTime"
     regex='Started Panamax UI'
-    journalctl --since="$logStartTime" -f | grep  'PMX_API\|PMX_UI\|Panamax' | while read line; do
-       echo $line
+    journalctl --since="$logStartTime" -f | while read line; do
+       echo $line | grep  'PMX_API\|PMX_UI\|Panamax'
        if [[ $line == *$regex* ]]; then
          pkill -9 -P $$ journalctl
        fi
