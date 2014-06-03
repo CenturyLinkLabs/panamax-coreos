@@ -185,6 +185,9 @@ function installPanamax {
         cp -Rf . $CWD > /dev/null
     fi
 
+    if [[  $operation == "reinstall" && "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then
+        vagrant box remove $BASEBOX
+    fi
     setEnvVar "PANAMAX_PORT_UI" $panamaxPortUi
     setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
     setEnvVar "BASEBOX" $BASEBOX_DEFAULT
