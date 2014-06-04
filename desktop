@@ -300,7 +300,7 @@ function sshToPanamax {
 
 function showShortHelp {
     echo ""
-    echo "./panamax {init|up|pause|restart|info|checkupdate|download|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable]"
+    echo "./panamax {init|up|pause|restart|info|checkupdate|download|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [--memory=3072]"
     echo ""
 }
 
