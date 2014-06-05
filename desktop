@@ -18,7 +18,7 @@ echo_install="init:          First time installing Panamax! - Downloads CoreOS V
 echo_restart="restart:       Stops and Starts Panamax."
 echo_reinstall="reinstall:     Deletes your applications and CoreOS VM; reinstalls to latest Panamax version."
 echo_update="download:      Updates to latest Panamax version."
-echo_checkUpdate="checkupdate:   Checks for available updates for Panamax."
+echo_checkUpdate="check:         Checks for available updates for Panamax."
 echo_info="info:          Displays version of your local panamax install."
 echo_stop="pause:         Stops Panamax"
 echo_start="up:            Starts Panamax"
@@ -303,15 +303,16 @@ function sshToPanamax {
 }
 
 function showShortHelp {
-    echo ""
-    echo "./panamax {init|up|pause|restart|info|checkupdate|download|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [--memory=3072] [--cpu=2]"
+    echo "./panamax {init|up|pause|restart|info|check|download|reinstall|delete|help} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [--memory=3072] [--cpu=2]"
     echo ""
 }
 
 function showLongHelp {
+    showShortHelp
     echo ""
     echo $'\n' $'\n' "$echo_install" $'\n' "$echo_stop" $'\n' "$echo_start" $'\n' "$echo_restart" $'\n' "$echo_reinstall" $'\n' "$echo_info" $'\n' "$echo_checkUpdate" $'\n' "$echo_update" $'\n' "$echo_uninstall" $'\n' "$echo_ssh" $'\n' "$echo_help"
     echo ""
+
 }
 
 function readParams {
@@ -372,7 +373,7 @@ function readParams {
         -vd=*|--vagrantdownload=*)
         download="${i#*=}"
         ;;
-        --help|-h)
+        --help|-h|help)
         showLongHelp;
         exit 1;
         ;;
