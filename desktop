@@ -11,7 +11,8 @@ setupUpdateUrl="http://63.128.180.11/installer/"
 CWD="${HOME}/.panamax/"
 env=$CWD.env
 PMX_VM_NAME="panamax-vm"
-PMX_VM_MEMORY=2048
+PMX_VM_MEMORY_DEFAULT=2048
+PMX_VM_CPUS_DEFAULT=2
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
 echo_restart="restart:       Stops and Starts Panamax."
@@ -167,14 +168,16 @@ function saveVersionInfo {
 function installPanamax {
     if [[ $# == 0 ]]; then
         echo ""
-        read -p "Enter memory (MB) to be allocated to Panamax VM($PMX_VM_MEMORY):" panamaxRam
+        read -p "Enter memory (MB) to be allocated to Panamax VM($PMX_VM_MEMORY_DEFAULT):" panamaxRam
+        read -p "Enter CPUs to be allocated to Panamax VM($PMX_VM_CPUS_DEFAULT):" panamaxCpus
         read -p "Enter default UI port($PANAMAX_PORT_UI):"  panamaxPortUi
         read -p "Enter default API port($PANAMAX_PORT_API):"  panamaxPortApi
         read -p "Enter version you want to use(dev/stable, defaults to:$IMAGE_TAG_DEFAULT)" panamaxVersion
         echo ""
     fi
 
-    panamaxRam=${panamaxRam:-$PMX_VM_MEMORY}
+    panamaxRam=${panamaxRam:-$PMX_VM_MEMORY_DEFAULT}
+    panamaxCpus=${panamaxCpus:-$PMX_VM_CPUS_DEFAULT}
     panamaxPortUi=${panamaxPortUi:-$PANAMAX_PORT_UI}
     panamaxPortApi=${panamaxPortApi:-$PANAMAX_PORT_API}
     redownload=${download:-N}
@@ -192,7 +195,8 @@ function installPanamax {
     setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
     setEnvVar "BASEBOX" $BASEBOX_DEFAULT
     setEnvVar "BASEBOX_URL" $BASEBOX_URL_DEFAULT
-    setEnvVar "PANAMAX_MEMORY" $panamaxRam
+    setEnvVar "PMX_VM_MEMORY" $panamaxRam
+    setEnvVar "PMX_VM_CPUS" $panamaxCpus
     saveVersionInfo
     setEnvVar "OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
@@ -300,7 +304,7 @@ function sshToPanamax {
 
 function showShortHelp {
     echo ""
-    echo "./panamax {init|up|pause|restart|info|checkupdate|download|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [--memory=3072]"
+    echo "./panamax {init|up|pause|restart|info|checkupdate|download|reinstall|delete} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [--memory=3072] [--cpu=2]"
     echo ""
 }
 
@@ -322,6 +326,9 @@ function readParams {
         ;;
         --memory=*)
         panamaxRam="${i#*=}"
+        ;;
+        --cpu=*)
+        panamaxCpus="${i#*=}"
         ;;
         install|init)
         operation=install
