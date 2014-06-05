@@ -54,33 +54,10 @@ function getRunCmdUI {
 }
 
 function startPmx {
-    if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -o $CONTAINER_NAME_API` == "" ]]; then
-        echo "No Container....building."
-        $(getRunCmdAPI)
-    else
-        echo "API Container Found....Trying restart..."
-        docker restart $CONTAINER_NAME_API
-        #Dead container
-        if [[ `docker ps -a | grep $CONTAINER_NAME_API | grep -i exit` != "" ]]; then
-            echo "Dead Container....rebuilding."
-            docker rm -f $CONTAINER_NAME_API
-           $(getRunCmdAPI)
-        fi
-    fi
-
-    if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -o $CONTAINER_NAME_UI` == "" ]]; then
-       echo "No Container....building."
-       $(getRunCmdUI)
-    else
-        echo "UI Container Found....Trying restart..."
-        docker restart $CONTAINER_NAME_UI
-        #Dead container
-        if [[ `docker ps -a | grep $CONTAINER_NAME_UI | grep -i exit` != "" ]]; then
-            echo "Dead Container....rebuilding."
-            docker rm -f $CONTAINER_NAME_UI
-            $(getRunCmdUI)
-        fi
-    fi
+    docker rm -f $CONTAINER_NAME_API
+    $(getRunCmdAPI)
+    docker rm -f $CONTAINER_NAME_UI
+    $(getRunCmdUI)
 }
 
 function stopPmx {
