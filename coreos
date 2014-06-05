@@ -1,13 +1,6 @@
 #! /bin/bash
 
-CONTAINER_NAME_UI="PMX_UI"
-CONTAINER_NAME_API="PMX_API"
-PRIVATE_REPO=74.201.240.198:5000
-NAMESPACE=panamax
-IMAGE_API=panamax-api
-IMAGE_UI=panamax-ui
-COREOS_ENDPOINT="http://172.17.42.1"
-IMAGE_TAG=stable
+source .coreosenv
 
 function operatePanamax {
  sudo systemctl $1 panamax-api.service
@@ -23,14 +16,7 @@ function uninstallPanamax {
     sudo rm units/panamax*.service
 }
 
-function installPanamax {
-    #if [[ "$operation" == "reinstall" ]]; then
-    #    uninstallPanamax
-    #fi
-
-    echo "Installing Panamax..."
-    startCoreOSServices
-
+function downloadPmxImages {
     echo ""
     echo "docker pull $IMAGE_API:$IMAGE_TAG "
     /usr/bin/docker pull $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG >/dev/null &
@@ -51,17 +37,26 @@ function installPanamax {
       sleep 1
     done
     echo ""
+}
 
-    sudo rm units/panamax*.service
-    writeUnitFile
+function installPanamax {
+    echo "Installing Panamax..."
+    startCoreOSServices
+    sudo rm units/*
+    writeUnitFiles
     sudo cp units/* /etc/systemd/system/
+    sudo cp scripts/* /etc/systemd/user
+    downloadPmxImages
     operatePanamax enable
     operatePanamax start
+    sudo mkdir -p metrics
+    sudo systemctl enable collect_metrics.timer
+    sudo systemctl start collect_metrics.timer
     waitUntilStarted
     echo "Panamax install complete"
 }
 
-function writeUnitFile {
+function writeUnitFiles {
  echo "[Unit]
       Description=Panamax API
       After=docker.service
@@ -89,10 +84,27 @@ function writeUnitFile {
 
       [Install]
       WantedBy=multi-user.target" > units/panamax-ui.service
+
+  echo "[Unit]
+        Description=Collect Performance Metrics
+
+        [Timer]
+        Unit=collect_metrics.service
+        OnCalendar=*:*:0/15
+
+        [Install]
+        WantedBy=multi-user.target" > units/collect_metrics.timer
+
+  echo "[Unit]
+        Description=Collect Metrics Service
+
+        [Service]
+        ExecStart=/bin/bash -c '/etc/systemd/user/collect_metrics.sh'
+        " > units/collect_metrics.service
 }
 
 function getRunCmdAPI {
-    echo "/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/panamax-data:/var/app/panamax-api/db/mnt -v /var/run/docker.sock:/run/docker.sock:rw -e PANAMAX_ID="$PANAMAX_ID"  -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -t  -p 3001:3000 " $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_API -v /var/panamax-data:/var/app/panamax-api/db/mnt -v /var/panamax/metrics:/var/app/metrics -v /var/run/docker.sock:/run/docker.sock:rw -e PANAMAX_ID="$PANAMAX_ID" -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -e  PANAMAX_METRICS_LOCATION=/var/panamax/metrics/ -t  -p 3001:3000 " $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
 }
 
 function getRunCmdUI {
@@ -108,9 +120,6 @@ function startCoreOSServices {
    sudo systemctl start etcd
    sudo systemctl enable fleet.service
    sudo systemctl start fleet.service
-   #if [[ `grep systemd-journal-gateway /etc/passwd` == "" ]]; then
-   # sudo useradd --system systemd-journal-gateway
-   #fi
    sudo systemctl enable systemd-journal-gatewayd.socket
    sudo systemctl start systemd-journal-gatewayd.socket
 }
