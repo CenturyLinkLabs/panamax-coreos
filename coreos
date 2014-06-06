@@ -49,7 +49,6 @@ function installPanamax {
     downloadPmxImages
     operatePanamax enable
     operatePanamax start
-    sudo mkdir /_panamax/host
     sudo systemctl enable collect_metrics.timer
     sudo systemctl start collect_metrics.timer
     waitUntilStarted
