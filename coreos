@@ -135,11 +135,11 @@ function getRunCmdAPI {
     if [[ "$PERSIST_DB" == "true" ]]; then
         dbMount="-v /var/panamax-data:/var/app/panamax-api/db/mnt"
     fi
-    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount  -v /var/run/docker.sock:/run/docker.sock:rw -e PANAMAX_ID="$PANAMAX_ID" -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -t  -p 3001:3000 " $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw -e PANAMAX_ID="$PANAMAX_ID" -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -t  -p 3001:3000 " $PRIVATE_REPO/$IMAGE_API:$IMAGE_TAG
 }
 
 function getRunCmdUI {
-    echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -v /var/run/docker.sock:/run/docker.sock:rw --link $CONTAINER_NAME_API:PMX_API --link $CONTAINER_NAME_CADVISOR:CADVISOR -p 3000:3000 " $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw --link $CONTAINER_NAME_API:PMX_API --link $CONTAINER_NAME_CADVISOR:CADVISOR -p 3000:3000 " $PRIVATE_REPO/$IMAGE_UI:$IMAGE_TAG
 }
 
 function startCoreOSServices {
