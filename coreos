@@ -122,7 +122,7 @@ function writeUnitFiles {
 
         [Service]
         ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
-        ExecStart=/usr/bin/docker run --volume=/var/run:/var/run:rw --volume=/sys/fs/cgroup/:/sys/fs/cgroup:ro --volume=/var/lib/docker/:/var/lib/docker:ro --publish=:8080 --name=$CONTAINER_NAME_CADVISOR --detach=true google/cadvisor
+        ExecStart=/usr/bin/docker run --volume=/var/run:/var/run:rw --volume=/sys/fs/cgroup/:/sys/fs/cgroup:ro --volume=/var/lib/docker/:/var/lib/docker:ro --publish=:8080 --name=$CONTAINER_NAME_CADVISOR google/cadvisor
         ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
         Restart=always
 
