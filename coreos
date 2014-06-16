@@ -48,7 +48,7 @@ function downloadPmxImages {
     while $(kill -n 0 $PID 2> /dev/null)
     do
       echo -n '.'
-      sleep 1
+      sleep 2
     done
 
     echo ""
@@ -58,13 +58,13 @@ function downloadPmxImages {
     while $(kill -n 0 $PID 2> /dev/null)
     do
       echo -n '.'
-      sleep 1
+      sleep 2
     done
     echo ""
 
     echo ""
-    echo "docker pull google/cadvisor"
-    /usr/bin/docker pull google/cadvisor >/dev/null &
+    echo "docker pull google/cadvisor:0.1.0"
+    /usr/bin/docker pull google/cadvisor:0.1.0 >/dev/null &
     PID=$!
     while $(kill -n 0 $PID 2> /dev/null)
     do
