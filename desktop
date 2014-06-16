@@ -82,7 +82,7 @@ function checkForSetupUpdate {
               echo "Local Panamax Installer version:"
               echo "$SETUP_VERSION"
               echo ""
-              echo "*** Panamax Installer is out of date! Please visit ($setupUpdateUrl) to update. ***"
+              echo "*** Panamax Installer is out of date! Please run (brew upgrade panamax, and panamax reinstall) to update. ***"
               updateAvailableForSetup="1"
             elif [[ "$1" == "e" ]]; then
               echo "Local Panamax Installer version:"
@@ -144,11 +144,11 @@ function checkForUpdate {
 }
 
 function getLatestTagUi {
-    echo `curl -silent $pmxUiTags  | grep '"[0-9]\+.[0-9]\+.[0-9]\+"' | awk '{ gsub(/[",:]/,"")} 1' | awk '{ print $1}' | awk 'END{print}'`
+    echo `curl --silent $pmxUiTags  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
 }
 
 function getLatestTagApi {
-    echo `curl -silent $pmxApiTags  | grep '"[0-9]\+.[0-9]\+.[0-9]\+"' | awk '{ gsub(/[",:]/,"")} 1' | awk '{ print $1}' | awk 'END{print}'`
+    echo `curl --silent $pmxApiTags  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
 }
 
 function runVagrant {
@@ -284,6 +284,7 @@ function updatePanamax {
         runVagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
         openPanamax;
         saveVersionInfo
+        checkForSetupUpdate
         echo Update Complete
     else
         echo "Panamax is already up to date."
