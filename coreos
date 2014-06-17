@@ -105,8 +105,8 @@ function writeUnitFiles {
 
  echo "[Unit]
       Description=Panamax UI
-      After=panamax-api.service
-      Requires=panamax-api.service
+      After=panamax-api.service panamax-metrics.service
+      Requires=panamax-api.service panamax-metrics.service
 
       [Service]
       ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_UI
