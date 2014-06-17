@@ -9,3 +9,4 @@ COREOS_ENDPOINT="http://172.17.42.1"
 IMAGE_TAG=stable
 CLEANUP_MODE=partial
 PERSIST_DB=true
+CADVISOR_IMAGE=google/cadvisor:0.1.0

@@ -63,8 +63,8 @@ function downloadPmxImages {
     echo ""
 
     echo ""
-    echo "docker pull google/cadvisor:0.1.0"
-    /usr/bin/docker pull google/cadvisor:0.1.0 >/dev/null &
+    echo "docker pull $CADVISOR_IMAGE"
+    /usr/bin/docker pull $CADVISOR_IMAGE >/dev/null &
     PID=$!
     while $(kill -n 0 $PID 2> /dev/null)
     do
@@ -122,7 +122,7 @@ function writeUnitFiles {
 
         [Service]
         ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
-        ExecStart=/usr/bin/docker run --volume=/var/run:/var/run:rw --volume=/sys/fs/cgroup/:/sys/fs/cgroup:ro --volume=/var/lib/docker/:/var/lib/docker:ro --publish=:8080 --name=$CONTAINER_NAME_CADVISOR google/cadvisor
+        ExecStart=/usr/bin/docker run --volume=/var/run:/var/run:rw --volume=/sys/fs/cgroup/:/sys/fs/cgroup:ro --volume=/var/lib/docker/:/var/lib/docker:ro --publish=:8080 --name=$CONTAINER_NAME_CADVISOR $CADVISOR_IMAGE
         ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
         Restart=always
 
