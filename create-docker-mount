@@ -14,4 +14,6 @@ Type=btrfs
 [Install]
 WantedBy=multi-user.target" > var-lib-docker.mount
 sudo cp var-lib-docker.mount /etc/systemd/system/
+sudo systemctl enable var-lib-docker.mount
+sudo systemctl start var-lib-docker.mount
 

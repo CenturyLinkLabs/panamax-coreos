@@ -181,7 +181,7 @@ function waitUntilStarted {
     regex='Started Panamax UI'
     journalctl --since="$logStartTime" -f | while read line; do
        echo $line | grep  'PMX_API\|PMX_UI\|Panamax'
-       if [[ $line == *$regex* ]]; then
+       if [[ `curl -sL -w "%{http_code}" "http://localhost:3000"  -o /dev/null` == "200" ]]; then
          pkill -9 -P $$ journalctl
        fi
     done

@@ -1,15 +1,15 @@
 #! /bin/bash
 
-PANAMAX_PORT_UI=8888
-PANAMAX_PORT_API=8889
+PMX_PORT_UI=8888
+PMX_PORT_API=8889
 BASEBOX_DEFAULT="panamax-coreos-box-349"
 BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/349.0.0/coreos_production_vagrant.box"
 IMAGE_TAG_DEFAULT=stable
-pmxUiTags="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
-pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
-setupUpdateUrl="http://63.128.180.11/installer/"
+PMX_UI_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
+PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
+SETUP_UPDATE_URL="http://63.128.180.11/installer/"
 CWD="${HOME}/.panamax/"
-env=$CWD.env
+ENV=$CWD.env
 PMX_VM_NAME="panamax-vm"
 PMX_VM_MEMORY_DEFAULT=2048
 PMX_VM_CPUS_DEFAULT=2
@@ -27,17 +27,16 @@ echo_ssh="ssh:           Ssh into Panamax CoreOS VM."
 echo_help="help:          Show this help"
 
 function displayLogo {
-tput clear
-
-echo ""
-echo -e "\033[30;90m███████╗ ██████╗  █████████╗ ██████╗ \033[0m\033[30;31m ██████████╗ ██████╗  ██╗  ██╗\033[0m"
-echo -e "\033[30;90m██╔══██║  ╚═══██╗ ███╗  ███║  ╚═══██╗\033[0m\033[30;31m ██║ ██╔ ██║  ╚═══██╗ ╚██╗██╔╝\033[0m"
-echo -e "\033[30;90m██   ██║ ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║  ╚███╔╝ \033[0m"
-echo -e "\033[30;90m███████╝ ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║  ██╔██╗ \033[0m"
-echo -e "\033[30;90m██║      ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║ ██╔╝ ██╗\033[0m"
-echo -e "\033[30;90m╚═╝      ╚══════╝ ╚══╝  ╚══╝ ╚══════╝\033[0m\033[30;31m ╚═╝ ╚═╝ ╚═╝ ╚══════╝ ╚═╝  ╚═╝\033[0m"
-echo ""
-echo "CenturyLink Labs - http://www.centurylinklabs.com/"
+    tput clear
+    echo ""
+    echo -e "\033[30;90m███████╗ ██████╗  █████████╗ ██████╗ \033[0m\033[30;31m ██████████╗ ██████╗  ██╗  ██╗\033[0m"
+    echo -e "\033[30;90m██╔══██║  ╚═══██╗ ███╗  ███║  ╚═══██╗\033[0m\033[30;31m ██║ ██╔ ██║  ╚═══██╗ ╚██╗██╔╝\033[0m"
+    echo -e "\033[30;90m██   ██║ ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║  ╚███╔╝ \033[0m"
+    echo -e "\033[30;90m███████╝ ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║  ██╔██╗ \033[0m"
+    echo -e "\033[30;90m██║      ███████║ ███║  ███║ ███████║\033[0m\033[30;31m ██║╚██║ ██║ ███████║ ██╔╝ ██╗\033[0m"
+    echo -e "\033[30;90m╚═╝      ╚══════╝ ╚══╝  ╚══╝ ╚══════╝\033[0m\033[30;31m ╚═╝ ╚═╝ ╚═╝ ╚══════╝ ╚═╝  ╚═╝\033[0m"
+    echo ""
+    echo "CenturyLink Labs - http://www.centurylinklabs.com/"
 }
 
 function checkPreReqs {
@@ -67,8 +66,8 @@ function checkForSetupUpdate {
     if [[ "$checkedSetupForUpdates" != "1" || "$1" == "u" ]]; then
         checkedSetupForUpdates="1"
         updateAvailableForSetup="0"
-        if [[ -f $env ]]; then
-            source $env
+        if [[ -f $ENV ]]; then
+            source $ENV
             majVer=`echo $SETUP_VERSION | awk -F "." '{ print $1 }'`
             minVer=`echo $SETUP_VERSION | awk -F "." '{ print $2 }'`
             patVer=`echo $SETUP_VERSION | awk -F "." '{ print $3 }'`
@@ -77,7 +76,7 @@ function checkForSetupUpdate {
             nextMajVer=`echo $majVer + 1 | bc`
             nextPatVer=`echo $patVer + 1 | bc`
 
-            versionList=`curl -sL $setupUpdateUrl | grep zip`
+            versionList=`curl -sL $SETUP_UPDATE_URL | grep zip`
             if [[ "`echo $versionList | grep "$majVer.$minVer.$nextPatVer"`" != "" || "`echo $versionList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" || "`echo $versionList | grep "$nextMajVer.[0-9]\+.[0-9]\+"`" != "" ]]; then
               echo "Local Panamax Installer version:"
               echo "$SETUP_VERSION"
@@ -99,8 +98,8 @@ function checkForPanamaxUpdate {
    if [[ "$checkedPmxForUpdates" != "1" || "$1" == "u" ]]; then
        checkedPmxForUpdates="1"
        updateAvailableForPmx="0"
-       if [[ -f $env ]]; then
-        source $env
+       if [[ -f $ENV ]]; then
+        source $ENV
         if [[ "$IMAGE_TAG" == "dev" ]]; then
             if [[ "$INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
                 echo "You are currently running a Dev version of Panamax which is updated nightly."
@@ -118,7 +117,7 @@ function checkForPanamaxUpdate {
                 echo "   UI: $latestTagUi"
                 echo "  API: $latestTagApi"
                 echo ""
-                echo "*** Panamax is out of date! Please use the update option to get the latest. Release notes are available at ($setupUpdateUrl) . ***"
+                echo "*** Panamax is out of date! Please use the update option to get the latest. Release notes are available at ($SETUP_UPDATE_URL) . ***"
                 echo ""
                 updateAvailableForPmx="1"
             elif [[ "$1" == "e" ]]; then
@@ -144,11 +143,11 @@ function checkForUpdate {
 }
 
 function getLatestTagUi {
-    echo `curl --silent $pmxUiTags  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
+    echo `curl --silent $PMX_UI_TAGS  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
 }
 
 function getLatestTagApi {
-    echo `curl --silent $pmxApiTags  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
+    echo `curl --silent $PMX_API_TAGS  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
 }
 
 function runVagrant {
@@ -166,22 +165,33 @@ function saveVersionInfo {
 }
 
 function installPanamax {
-    #vagrant plugin install vagrant-persistent-storage
+    if [[ "$operation" == "install"  && "`runVagrant status $PMX_VM_NAME --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
+        echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
+        exit 1;
+    fi
+
+    if [[ "$operation" == "reinstall" ]]; then
+        VBoxManage showvminfo $PMX_VM_NAME  > /dev/null 2>&1
+        if [[ "$?" -ne "0" ]]; then
+            echo "$PMX_VM_NAME does not exist. Please run init before you can reinstall"
+            exit 1;
+        fi
+    fi
 
     if [[ $# == 0 ]]; then
         echo ""
         read -p "Enter memory (MB) to be allocated to Panamax VM($PMX_VM_MEMORY_DEFAULT):" panamaxRam
         read -p "Enter CPUs to be allocated to Panamax VM($PMX_VM_CPUS_DEFAULT):" panamaxCpus
-        read -p "Enter default UI port($PANAMAX_PORT_UI):"  panamaxPortUi
-        read -p "Enter default API port($PANAMAX_PORT_API):"  panamaxPortApi
+        read -p "Enter default UI port($PMX_PORT_UI):"  panamaxPortUi
+        read -p "Enter default API port($PMX_PORT_API):"  panamaxPortApi
         read -p "Enter version you want to use(dev/stable, defaults to:$IMAGE_TAG_DEFAULT)" panamaxVersion
         echo ""
     fi
 
     panamaxRam=${panamaxRam:-$PMX_VM_MEMORY_DEFAULT}
     panamaxCpus=${panamaxCpus:-$PMX_VM_CPUS_DEFAULT}
-    panamaxPortUi=${panamaxPortUi:-$PANAMAX_PORT_UI}
-    panamaxPortApi=${panamaxPortApi:-$PANAMAX_PORT_API}
+    panamaxPortUi=${panamaxPortUi:-$PMX_PORT_UI}
+    panamaxPortApi=${panamaxPortApi:-$PMX_PORT_API}
     redownload=${download:-N}
     IMAGE_TAG=${panamaxVersion:-${IMAGE_TAG:-$IMAGE_TAG_DEFAULT}}
 
@@ -193,10 +203,10 @@ function installPanamax {
     if [[ "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then
         vagrant box remove $BASEBOX
     fi
-    setEnvVar "PANAMAX_PORT_UI" $panamaxPortUi
-    setEnvVar "PANAMAX_PORT_API" $panamaxPortApi
-    setEnvVar "BASEBOX" $BASEBOX_DEFAULT
-    setEnvVar "BASEBOX_URL" $BASEBOX_URL_DEFAULT
+    setEnvVar "PMX_PORT_UI" $panamaxPortUi
+    setEnvVar "PMX_PORT_API" $panamaxPortApi
+    setEnvVar "BASEBOX" \"$BASEBOX_DEFAULT\"
+    setEnvVar "BASEBOX_URL" \"$BASEBOX_URL_DEFAULT\"
     setEnvVar "PMX_VM_MEMORY" $panamaxRam
     setEnvVar "PMX_VM_CPUS" $panamaxCpus
     saveVersionInfo
@@ -205,58 +215,60 @@ function installPanamax {
     if [[ "$PANAMAX_ID" == "" ]]; then
        setEnvVar "PANAMAX_ID" "\"`uuidgen`\""
     fi
-    source $env
+    source $ENV
 
     if [[  $operation == "reinstall" ]]; then
         echo ""
-        echo "Reinstalling the vagrant machine"
+        echo "Reinstalling Panamax..."
 	    if [[ "$#" == "0" ]]; then
 	        read -p "Would you like to re-download coreos base box(N): " redownload
 	    fi
-	    runVagrant halt
-	    VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
+	    if [[ -f "images.vdi" ]]; then
+	        runVagrant halt
+	        VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
+	    fi
         runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
         if [[ $redownload == "Y" ]]; then
             vagrant box update --box $BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
-        else
-            runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
         fi
+        createPmxVM
     else
-        if [[ "`runVagrant status $PMX_VM_NAME --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
-            echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
-            exit 1;
-        fi
-	echo ""
-	echo "Creating a new vagrant machine"
-	runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
+        createPmxVM
     fi
-
     openPanamax;
 }
 
 function createPmxVM {
-    runVagrant up
-    runVagrant pause
-    VboxManage storagectl panamax-vm --name "SATA Controller" --add sata
-    VBoxManage storageattach panamax-vm --storagectl "SATA Controller" --port 1 --device 0 --type hdd --medium images.vdi
-    runVagrant up
+    echo ""
+	echo "Creating a new CoreOS VM..."
+    if [[ -f "images.zip" ]]; then
+        unzip -ou images.zip
+    fi
+    if [[ ! -f "images.vdi" ]]; then
+        echo "Downloading images"
+        curl http://panamax-images.ca.tier3.io/images.zip -o images.zip
+	    unzip -ou images.zip
+    fi
+    runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
+    rm images.zip
 }
 
+
 function setEnvVar {
-    echo $"`sed  "/$1=/d" $env`" > $env
-    echo export $1=$2 >> $env
+    echo $"`sed  "/$1=/d" $ENV`" > $ENV
+    echo export $1=$2 >> $ENV
 }
 
 function openPanamax {
     echo "waiting for panamax to start....."
-    until [ `curl -sL -w "%{http_code}" "http://localhost:$PANAMAX_PORT_UI"  -o /dev/null` == "200" ];
+    until [ `curl -sL -w "%{http_code}" "http://localhost:$PMX_PORT_UI"  -o /dev/null` == "200" ];
     do
       printf .
       sleep 2
     done
 
     echo ""
-    open "http://localhost:$PANAMAX_PORT_UI" || { echo "Please goto http://localhost:$PANAMAX_PORT_UI"; }
+    open "http://localhost:$PMX_PORT_UI" || { echo "Please goto http://localhost:$PMX_PORT_UI"; }
     echo ""
     echo ""
 }
@@ -264,9 +276,7 @@ function openPanamax {
 function restartPanamax {
     echo Restarting Panamax
     setEnvVar "OPERATION" "$operation"
-    source $env
-    #VBoxManage storagectl panamax-vm --name "SATA Controller" --remove
-    #VBoxManage storageattach panamax-vm --storagectl "SATA Controller" --port 1 --device 0 --type hdd --medium images.vdi
+    source $ENV
     runVagrant reload --provision || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     openPanamax;
     echo Restart complete
@@ -275,15 +285,16 @@ function restartPanamax {
 function startPanamax {
     echo Starting Panamax
     setEnvVar "OPERATION" "$operation"
-    source $env
-    runVagrant resume || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
+    source $ENV
+    runVagrant reload --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
     openPanamax
     echo Start Complete
 }
+
 function stopPanamax {
     echo Stopping Panamax
     setEnvVar "OPERATION" "$operation"
-    source $env
+    source $ENV
     runVagrant halt || { echo >&2 "Stopping Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     echo Panamax stopped.
 }
@@ -291,7 +302,7 @@ function stopPanamax {
 function updatePanamax {
     setEnvVar "OPERATION" "$operation"
     setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
-    source $env
+    source $ENV
     checkForPanamaxUpdate
     if [[ $updateAvailableForPmx == "1" ]]; then
         echo Updating Panamax
@@ -308,8 +319,8 @@ function updatePanamax {
 function uninstallPanamax {
   setEnvVar "OPERATION" "$operation"
   echo Uninstalling Panamax
-  vagrant box remove $BASEBOX
   runVagrant destroy -f
+  vagrant box remove $BASEBOX
   echo Uninstall complete.
 }
 
@@ -327,7 +338,6 @@ function showLongHelp {
     echo ""
     echo $'\n' $'\n' "$echo_install" $'\n' "$echo_stop" $'\n' "$echo_start" $'\n' "$echo_restart" $'\n' "$echo_reinstall" $'\n' "$echo_info" $'\n' "$echo_checkUpdate" $'\n' "$echo_update" $'\n' "$echo_uninstall" $'\n' "$echo_ssh" $'\n' "$echo_help"
     echo ""
-
 }
 
 function readParams {
@@ -401,12 +411,12 @@ function readParams {
 }
 
 function main {
-    if [[ -f $env ]]; then
-        source $env
+    if [[ -f $ENV ]]; then
+        source $ENV
     else
-        touch $env
+        touch $ENV
     fi
-    #displayLogo
+    displayLogo
     checkPreReqs;
     readParams "$@"
 

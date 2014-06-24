@@ -1,5 +1,0 @@
-[Unit]
-Description=Collect Metrics Service
-
-[Service]
-ExecStart=/bin/bash -c '/etc/systemd/user/collect_metrics.sh'
