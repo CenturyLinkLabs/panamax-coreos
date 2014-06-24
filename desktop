@@ -2,8 +2,8 @@
 
 PANAMAX_PORT_UI=8888
 PANAMAX_PORT_API=8889
-BASEBOX_DEFAULT="panamax-coreos-box-324"
-BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/324.0.0/coreos_production_vagrant.box"
+BASEBOX_DEFAULT="panamax-coreos-box-346"
+BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/346.0.0/coreos_production_vagrant.box"
 IMAGE_TAG_DEFAULT=stable
 pmxUiTags="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 pmxApiTags="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
@@ -45,12 +45,12 @@ function checkPreReqs {
     echo "Checking if required software is installed."
     echo ""
 
-    vagrant -v | grep -w '1.[5-9]' 2>&1 >/dev/null
+    vagrant -v | grep -w '1.[6-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
 	    echo "Please install vagrant version 1.5 or newer (https://www.vagrantup.com/downloads.html).";
 	    exit 1;
     else
-	    echo $'Vagrant 1.5 or newer installed.'
+	    echo $'Vagrant 1.6 or newer installed.'
     fi
 
     virtualbox --help 2>&1 >/dev/null
@@ -166,6 +166,8 @@ function saveVersionInfo {
 }
 
 function installPanamax {
+    #vagrant plugin install vagrant-persistent-storage
+
     if [[ $# == 0 ]]; then
         echo ""
         read -p "Enter memory (MB) to be allocated to Panamax VM($PMX_VM_MEMORY_DEFAULT):" panamaxRam
@@ -188,7 +190,7 @@ function installPanamax {
         cp -Rf . $CWD > /dev/null
     fi
 
-    if [[  $operation == "reinstall" && "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then
+    if [[ "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then
         vagrant box remove $BASEBOX
     fi
     setEnvVar "PANAMAX_PORT_UI" $panamaxPortUi
@@ -211,6 +213,8 @@ function installPanamax {
 	    if [[ "$#" == "0" ]]; then
 	        read -p "Would you like to re-download coreos base box(N): " redownload
 	    fi
+	    runVagrant halt
+	    VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
         runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
         if [[ $redownload == "Y" ]]; then
             vagrant box update --box $BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
@@ -218,7 +222,7 @@ function installPanamax {
             runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
         fi
     else
-        if [[ "`runVagrant status panamax-vm --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
+        if [[ "`runVagrant status $PMX_VM_NAME --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
             echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
             exit 1;
         fi
@@ -228,6 +232,14 @@ function installPanamax {
     fi
 
     openPanamax;
+}
+
+function createPmxVM {
+    runVagrant up
+    runVagrant pause
+    VboxManage storagectl panamax-vm --name "SATA Controller" --add sata
+    VBoxManage storageattach panamax-vm --storagectl "SATA Controller" --port 1 --device 0 --type hdd --medium images.vdi
+    runVagrant up
 }
 
 function setEnvVar {
@@ -253,7 +265,9 @@ function restartPanamax {
     echo Restarting Panamax
     setEnvVar "OPERATION" "$operation"
     source $env
-    runVagrant reload || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+    #VBoxManage storagectl panamax-vm --name "SATA Controller" --remove
+    #VBoxManage storageattach panamax-vm --storagectl "SATA Controller" --port 1 --device 0 --type hdd --medium images.vdi
+    runVagrant reload --provision || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     openPanamax;
     echo Restart complete
 }
@@ -262,7 +276,7 @@ function startPanamax {
     echo Starting Panamax
     setEnvVar "OPERATION" "$operation"
     source $env
-    runVagrant up || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
+    runVagrant resume || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
     openPanamax
     echo Start Complete
 }
@@ -392,7 +406,7 @@ function main {
     else
         touch $env
     fi
-    displayLogo
+    #displayLogo
     checkPreReqs;
     readParams "$@"
 
