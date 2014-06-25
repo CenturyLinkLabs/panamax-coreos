@@ -250,7 +250,7 @@ function createPmxVM {
 	    unzip -ou images.zip
     fi
     runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
-    rm images.zip
+    rm -q images.zip
 }
 
 

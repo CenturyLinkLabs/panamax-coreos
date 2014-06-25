@@ -30,7 +30,9 @@ Vagrant.configure("2") do |config|
     end
     config.vm.synced_folder ".", "/var/panamax", type: "rsync", rsync__exclude: "images*"
     #Docker Mount
-    config.vm.provision "shell", inline: "cd /var/panamax && ./create-docker-mount"
+    if ARGV[0] == "up" then
+        config.vm.provision "shell", inline: "cd /var/panamax && ./create-docker-mount"
+    end
     config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/coreos"
     config.vm.provision "shell", inline: "cd /var/panamax && ./coreos $1 --$2 -pid=\"$3\"", args: "#{ENV['OPERATION'] || 'install'} #{ENV['IMAGE_TAG'] || 'stable'} #{ENV['PANAMAX_ID'] || 'not-set'} "
     config.vm.synced_folder ".", "/vagrant", disabled: true
