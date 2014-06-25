@@ -199,8 +199,8 @@ function installPanamax {
         mkdir -p $CWD
         cp -Rf . $CWD > /dev/null
     fi
-
-    if [[ "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then
+    
+    if [[ "$BASEBOX" != "" && "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
         vagrant box remove $BASEBOX
     fi
     setEnvVar "PMX_PORT_UI" $panamaxPortUi
@@ -241,16 +241,23 @@ function installPanamax {
 function createPmxVM {
     echo ""
 	echo "Creating a new CoreOS VM..."
-    if [[ -f "images.zip" ]]; then
-        unzip -ou images.zip
+    if [[ ! -f "images.vdi" &&  -f "images.zip" ]]; then
+        unzip -t images.zip  > /dev/null 2>&1
+        if [[ "$?" == "0" ]]; then 
+            unzip -ou images.zip
+        fi
     fi
     if [[ ! -f "images.vdi" ]]; then
         echo "Downloading images"
         curl http://panamax-images.ca.tier3.io/images.zip -o images.zip
 	    unzip -ou images.zip
     fi
+    if [[ ! -f "images.vdi" ]]; then 
+        echo "Error downloading images disk. Please try again later."
+        exit 1;
+    fi
     runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
-    rm -q images.zip
+    rm -f images.zip
 }
 
 
