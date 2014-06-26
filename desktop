@@ -249,7 +249,7 @@ function createPmxVM {
     fi
     if [[ ! -f "images.vdi" ]]; then
         echo "Downloading images"
-        curl http://panamax-images.ca.tier3.io/images.zip -o images.zip
+        curl http://panamax-images.ca.tier3.io/images.zip -o images.zip --progress-bar
 	    unzip -ou images.zip
     fi
     if [[ ! -f "images.vdi" ]]; then 
