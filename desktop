@@ -46,7 +46,7 @@ function checkPreReqs {
 
     vagrant -v | grep -w '1.[6-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
-	    echo "Please install vagrant version 1.5 or newer (https://www.vagrantup.com/downloads.html).";
+	    echo "Please install vagrant version 1.6.3 or newer (https://www.vagrantup.com/downloads.html).";
 	    exit 1;
     else
 	    echo $'Vagrant 1.6 or newer installed.'
