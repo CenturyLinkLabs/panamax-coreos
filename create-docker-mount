@@ -1,0 +1,27 @@
+#!/bin/sh
+
+drives=( `ls /dev/sd*` ); for i in "${drives[@]}"; do  if [[ "`df -k | grep $i`" == "" ]]; then imageDrive=$i; fi; done;
+
+sudo btrfs filesystem label $imageDrive images
+
+echo \
+"[Unit]
+Name=var-lib-docker.mount
+Description=Mount images.vdi to /var/lib/docker
+Before=docker.service
+Before=local-fs.target
+
+[Mount]
+What=/dev/disk/by-label/images
+Where=/var/lib/docker
+Type=btrfs
+
+[Install]
+WantedBy=multi-user.target" > var-lib-docker.mount
+
+sudo cp var-lib-docker.mount /etc/systemd/system/
+sudo systemctl enable var-lib-docker.mount
+sudo systemctl start var-lib-docker.mount
+
+
+
