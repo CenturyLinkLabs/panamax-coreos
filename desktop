@@ -108,7 +108,12 @@ function checkForPanamaxUpdate {
                 echo "You are currently running a Dev version of Panamax which is updated nightly."
                 echo "A newer Dev version is available. Use the update option to get the latest Dev version."
                 updateAvailableForPmx="1"
+            elif [[ "$1" == "e" ]]; then
+                echo "Local Panamax component versions:"
+                echo "   UI: dev nightly build"
+                echo "  API: dev nightly build"
             fi
+
         elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" || "$1" == "e" ]]; then
             latestTagApi=$(getLatestTagApi)
             latestTagUi=$(getLatestTagUi)
