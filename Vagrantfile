@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
         vb.name = ENV['PMX_VM_NAME'] || "panamax-vm"
         vb.customize ["modifyvm", :id, "--memory", Integer(ENV['PMX_VM_MEMORY']||2048)]
         vb.customize ["modifyvm", :id, "--ioapic", "on"]
-        vb.customize ["modifyvm", :id, "--cpus", Integer(ENV['PMX_VM_CPUS']||2)]
+        vb.customize ["modifyvm", :id, "--cpus", Integer(ENV['PMX_VM_CPUS']||1)]
         vb.customize ['storageattach', :id, '--storagectl', 'IDE Controller', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', imagesDisk]
     end
     config.vm.define :ENV['PMX_VM_NAME'] || "panamax-vm"
