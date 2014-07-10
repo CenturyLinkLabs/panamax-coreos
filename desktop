@@ -257,8 +257,15 @@ function createPmxVM {
     fi
     if [[ ! -f "$IMAGES_VDI" ]]; then
         echo "Downloading images"
-        curl $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
-	    unzip -ou $IMAGES_ZIP
+        download_complete="-1"
+        until [ "$download_complete"  == "0" ];
+        do
+          curl -C -  $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
+          sleep 2
+          unzip -t $IMAGES_ZIP
+          download_complete=$?
+        done
+        unzip -ou $IMAGES_ZIP
     fi
     if [[ ! -f "$IMAGES_VDI" ]]; then 
         echo "Error downloading images disk. Please try again later."
