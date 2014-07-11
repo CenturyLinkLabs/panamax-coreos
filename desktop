@@ -14,7 +14,7 @@ IMAGES_VDI="$CWD"images.vdi
 IMAGES_ZIP="$CWD"images.zip
 IMAGES_CDN="http://panamax-images.ca.tier3.io/images.zip"
 PMX_VM_NAME="panamax-vm"
-PMX_VM_MEMORY_DEFAULT=2048
+PMX_VM_MEMORY_DEFAULT=1024
 PMX_VM_CPUS_DEFAULT=2
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
