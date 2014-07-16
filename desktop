@@ -65,22 +65,51 @@ function checkPreReqs {
     echo ""
 }
 
+
+function getLatestVersion () {
+    vList="$@"
+    versions=($@)
+    vMax=${versions[0]}
+    for i in "${versions[@]}"
+    do
+        result="`newerVersionAvailable $i \"$vList\"`"
+        if [[ "$result" == "0" ]]; then
+            vMax=$i
+        fi
+    done
+    echo $vMax
+}
+
+function newerVersionAvailable() {
+    local v1=$1
+    local vList=$2
+    majVer=`echo $v1 | awk -F "." '{ print $1 }'`
+    minVer=`echo $v1 | awk -F "." '{ print $2 }'`
+    patVer=`echo $v1 | awk -F "." '{ print $3 }'`
+
+    nextMinVer=`echo $minVer + 1 | bc`
+    nextMajVer=`echo $majVer + 1 | bc`
+    nextPatVer=`echo $patVer + 1 | bc`
+    local newVerAvailable=0
+    if [[ "`echo $vList | grep "$majVer.$minVer.$nextPatVer"`" != "" \
+        || "`echo $vList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" \
+        || "`echo $vList | grep "$nextMajVer\.[0-9]*\.[0-9]*"`" != "" ]]; then
+      newVerAvailable=1
+    fi
+    echo $newVerAvailable
+}
+
+
 function checkForSetupUpdate {
     if [[ "$checkedSetupForUpdates" != "1" || "$1" == "u" ]]; then
         checkedSetupForUpdates="1"
         updateAvailableForSetup="0"
         if [[ -f $ENV ]]; then
             source $ENV
-            majVer=`echo $SETUP_VERSION | awk -F "." '{ print $1 }'`
-            minVer=`echo $SETUP_VERSION | awk -F "." '{ print $2 }'`
-            patVer=`echo $SETUP_VERSION | awk -F "." '{ print $3 }'`
-
-            nextMinVer=`echo $minVer + 1 | bc`
-            nextMajVer=`echo $majVer + 1 | bc`
-            nextPatVer=`echo $patVer + 1 | bc`
-
             versionList=`curl -sL $SETUP_UPDATE_URL | grep zip`
-            if [[ "`echo $versionList | grep "$majVer.$minVer.$nextPatVer"`" != "" || "`echo $versionList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" || "`echo $versionList | grep "$nextMajVer.[0-9]\+.[0-9]\+"`" != "" ]]; then
+            local newVersionAvailable="`newerVersionAvailable $SETUP_VERSION $versionList`"
+            
+            if [[ "$newVersionAvailable" == "1" ]]; then
               echo "Local Panamax Installer version:"
               echo "$SETUP_VERSION"
               echo ""
@@ -115,9 +144,9 @@ function checkForPanamaxUpdate {
             fi
 
         elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" || "$1" == "e" ]]; then
-            latestTagApi=$(getLatestTagApi)
-            latestTagUi=$(getLatestTagUi)
-            if [[ "$INSTALL_TAG_UI" < "$latestTagUi" || "$INSTALL_TAG_API" < "$latestTagApi" ]]; then
+            latestTagUi="`getLatestVersion $INSTALL_TAG_UI \"$(getTagsUi)\"`"
+            latestTagApi="`getLatestVersion $INSTALL_TAG_API \"$(getTagsApi)\"`"
+            if [[ "$INSTALL_TAG_UI" != "$latestTagUi" || "$INSTALL_TAG_API" != "$latestTagApi" ]]; then
                 echo "Local Panamax component versions:"
                 echo "   UI: $INSTALL_TAG_UI"
                 echo "  API: $INSTALL_TAG_API"
@@ -150,12 +179,12 @@ function checkForUpdate {
     echo ""
 }
 
-function getLatestTagUi {
-    echo `curl --silent $PMX_UI_TAGS  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
+function getTagsUi {
+    echo `curl --silent $PMX_UI_TAGS  | grep -o "[0-9]*\.[0-9]*\.[0-9]*"  | awk '{ print $1}'`
 }
 
-function getLatestTagApi {
-    echo `curl --silent $PMX_API_TAGS  | grep -o "[0-9]\.[0-9]\.[0-9]"  | awk '{ print $1}' | awk 'END{print}'`
+function getTagsApi {
+    echo `curl --silent $PMX_API_TAGS  | grep -o "[0-9]*\.[0-9]*\.[0-9]*"  | awk '{ print $1}'`
 }
 
 function runVagrant {
