@@ -3,7 +3,7 @@
 PMX_PORT_UI=8888
 PMX_PORT_API=8889
 BASEBOX_DEFAULT="panamax-coreos-box-349"
-BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/349.0.0/coreos_production_vagrant.box"
+BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_production_vagrant.box"
 IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
