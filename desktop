@@ -2,8 +2,8 @@
 
 PMX_PORT_UI=8888
 PMX_PORT_API=8889
-BASEBOX_DEFAULT="panamax-coreos-box-349"
-BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/349.0.0/coreos_production_vagrant.box"
+BASEBOX_DEFAULT="panamax-coreos-box-367"
+BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_production_vagrant.box"
 IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
@@ -248,29 +248,30 @@ function installPanamax {
 
 function createPmxVM {
     echo ""
-	echo "Creating a new CoreOS VM..."
-    if [[ ! -f "$IMAGES_VDI" &&  -f "$IMAGES_ZIP" ]]; then
-        unzip -t $IMAGES_ZIP  > /dev/null 2>&1
-        if [[ "$?" == "0" ]]; then 
-            unzip -ou $IMAGES_ZIP
-        fi
-    fi
-    if [[ ! -f "$IMAGES_VDI" ]]; then
-        echo "Downloading images"
-        download_complete="-1"
-        until [ "$download_complete"  == "0" ];
-        do
-          curl -C -  $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
-          sleep 2
-          unzip -t $IMAGES_ZIP
-          download_complete=$?
-        done
-        unzip -ou $IMAGES_ZIP
-    fi
-    if [[ ! -f "$IMAGES_VDI" ]]; then 
-        echo "Error downloading images disk. Please try again later."
-        exit 1;
-    fi
+echo "Creating a new CoreOS VM..."
+if [[ ! -f "$IMAGES_VDI" ]]; then
+  if [[ -f "$IMAGES_ZIP" ]]; then 
+    unzip -t "$IMAGES_ZIP"
+    download_complete=$?
+  fi
+  if [[ "$download_complete" != "0" || ! -f "$IMAGES_ZIP" ]]; then    
+    echo "Downloading images"
+    download_complete="-1"
+    until [ "$download_complete"  == "0" ];
+    do
+      curl -C -  $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
+      sleep 2
+      unzip -t $IMAGES_ZIP
+      download_complete=$?
+    done    
+  fi
+  unzip -ou $IMAGES_ZIP
+fi
+sleep 5
+if [[ ! -f "$IMAGES_VDI" ]]; then
+  echo "Error downloading images disk. Please try again later."
+  exit 1;
+fi
     runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
     rm -f images.zip
 }
