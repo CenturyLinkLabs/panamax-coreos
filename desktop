@@ -195,8 +195,8 @@ function saveVersionInfo {
     setEnvVar "SETUP_VERSION" "\"$(<$CWD\.version)\""
     setEnvVar "INSTALL_DATE" "\"`date +%s`\""
     if [[ "$IMAGE_TAG" == "stable" ]]; then
-        setEnvVar "INSTALL_TAG_UI" "\"$(getLatestTagUi)\""
-        setEnvVar "INSTALL_TAG_API" "\"$(getLatestTagApi)\""
+        setEnvVar "INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
+        setEnvVar "INSTALL_TAG_API" "`getLatestVersion  \"$(getTagsApi)\"`"
     fi
     setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
 }
