@@ -11,8 +11,8 @@ SETUP_UPDATE_URL="http://63.128.180.11/installer/"
 CWD="${HOME}/.panamax/"
 ENV=$CWD.env
 IMAGES_VDI="$CWD"images.vdi
-IMAGES_ZIP="$CWD"images.zip
-IMAGES_CDN="http://download.panamax.io/images.zip"
+IMAGES_ZIP="$CWD"images.tar.gz
+IMAGES_CDN="http://download.panamax.io/images.tar.gz"
 PMX_VM_NAME="panamax-vm"
 PMX_VM_MEMORY_DEFAULT=1024
 PMX_VM_CPUS_DEFAULT=2
@@ -49,10 +49,10 @@ function checkPreReqs {
 
     vagrant -v | grep -w '1.[6-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
-	    echo "Please install vagrant version 1.6.3 or newer (https://www.vagrantup.com/downloads.html).";
-	    exit 1;
+        echo "Please install vagrant version 1.6.3 or newer (https://www.vagrantup.com/downloads.html).";
+        exit 1;
     else
-	    echo $'Vagrant 1.6 or newer installed.'
+        echo $'Vagrant 1.6 or newer installed.'
     fi
 
     virtualbox --help 2>&1 >/dev/null
@@ -60,7 +60,7 @@ function checkPreReqs {
         echo "Please install Virtualbox (https://www.virtualbox.org/wiki/Downloads).";
         exit 1;
     else
-    	echo $'Virtualbox 4.2 or newer installed.'
+        echo $'Virtualbox 4.2 or newer installed.'
     fi
     echo ""
 }
@@ -228,13 +228,13 @@ function installPanamax {
     if [[  $operation == "reinstall" ]]; then
         echo ""
         echo "Reinstalling Panamax..."
-	    if [[ "$#" == "0" ]]; then
-	        read -p "Would you like to re-download coreos base box(N): " redownload
-	    fi
-	    if [[ -f "$IMAGES_VDI" ]]; then
-	        runVagrant halt
-	        VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
-	    fi
+        if [[ "$#" == "0" ]]; then
+            read -p "Would you like to re-download coreos base box(N): " redownload
+        fi
+        if [[ -f "$IMAGES_VDI" ]]; then
+            runVagrant halt
+            VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
+        fi
         runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
         if [[ $redownload == "Y" ]]; then
             vagrant box update --box $BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
@@ -248,32 +248,31 @@ function installPanamax {
 
 function createPmxVM {
     echo ""
-echo "Creating a new CoreOS VM..."
-if [[ ! -f "$IMAGES_VDI" ]]; then
-  if [[ -f "$IMAGES_ZIP" ]]; then 
-    unzip -t "$IMAGES_ZIP"
-    download_complete=$?
-  fi
-  if [[ "$download_complete" != "0" || ! -f "$IMAGES_ZIP" ]]; then    
-    echo "Downloading images"
-    download_complete="-1"
-    until [ "$download_complete"  == "0" ];
-    do
-      curl -C -  $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
-      sleep 2
-      unzip -t $IMAGES_ZIP
-      download_complete=$?
-    done    
-  fi
-  unzip -ou $IMAGES_ZIP
-fi
-sleep 5
-if [[ ! -f "$IMAGES_VDI" ]]; then
-  echo "Error downloading images disk. Please try again later."
-  exit 1;
-fi
+    echo "Creating a new CoreOS VM..."
+    if [[ ! -f "$IMAGES_VDI" ]]; then
+        if [[ -f "$IMAGES_ZIP" ]]; then 
+            tar -zxf "$IMAGES_ZIP" -C $CWD
+            download_complete=$?
+        fi
+        if [[ "$download_complete" != "0" || ! -f "$IMAGES_ZIP" ]]; then    
+            echo "Downloading images"
+            download_complete="-1"
+            until [ "$download_complete"  == "0" ];
+            do
+                curl -C -  $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
+                sleep 2
+                tar -tzf "$IMAGES_ZIP" >/dev/null
+                download_complete=$?
+            done    
+        fi
+    fi
+    tar -zxf "$IMAGES_ZIP" -C $CWD
+    if [[ ! -f "$IMAGES_VDI" ]]; then
+        echo "Error downloading images disk. Please try again later."
+        exit 1;
+    fi
     runVagrant up || { echo "VM Creation failed. Exiting."; exit 1; }
-    rm -f images.zip
+    rm -f $IMAGES_ZIP
 }
 
 
@@ -348,7 +347,7 @@ function uninstallPanamax {
 }
 
 function sshToPanamax {
- runVagrant ssh
+  runVagrant ssh
 }
 
 function showShortHelp {
@@ -457,7 +456,7 @@ function main {
             ssh) sshToPanamax;;
             *) showLongHelp;;
         esac
-	
+    
     else
         echo "Please select one of the following options: "
         select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
