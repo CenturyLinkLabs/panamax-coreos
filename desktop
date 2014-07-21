@@ -7,7 +7,7 @@ BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_
 IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
-SETUP_UPDATE_URL="http://63.128.180.11/installer/"
+SETUP_UPDATE_URL="http://panamax.io/documentation/"
 CWD="${HOME}/.panamax/"
 ENV=$CWD.env
 IMAGES_VDI="$CWD"images.vdi
@@ -125,7 +125,7 @@ function checkForPanamaxUpdate {
                 echo "   UI: $latestTagUi"
                 echo "  API: $latestTagApi"
                 echo ""
-                echo "*** Panamax is out of date! Please use the update option to get the latest. Release notes are available at ($SETUP_UPDATE_URL) . ***"
+                echo "*** Panamax is out of date! Please use the download/update option to get the latest. Release notes are available at ($SETUP_UPDATE_URL) . ***"
                 echo ""
                 updateAvailableForPmx="1"
             elif [[ "$1" == "e" ]]; then
