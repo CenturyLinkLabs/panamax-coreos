@@ -468,19 +468,19 @@ function main {
         touch $ENV
     fi
     displayLogo
-    checkPreReqs;
+    
     readParams "$@"
 
     if [[ $# -gt 0 ]]; then
         case $operation in
-            install)   installPanamax "$@" || { showHelp; exit 1; } ;;
-            reinstall)   installPanamax "$@" || { showHelp; exit 1; } ;;
-            restart) restartPanamax;;
-            stop) stopPanamax;;
-            start) startPanamax;;
-            check)checkForUpdate "u";;
-            info)checkForUpdate "e";;
-            update) updatePanamax;;
+            install)   checkPreReqs; installPanamax "$@" || { showHelp; exit 1; } ;;
+            reinstall)   checkPreReqs; installPanamax "$@" || { showHelp; exit 1; } ;;
+            restart) checkPreReqs; restartPanamax;;
+            stop) checkPreReqs; stopPanamax;;
+            start) checkPreReqs; startPanamax;;
+            check) checkPreReqs; checkForUpdate "u";;
+            info) checkPreReqs; checkForUpdate "e";;
+            update) checkPreReqs; updatePanamax;;
             uninstall) uninstallPanamax;;
             ssh) sshToPanamax;;
             *) showLongHelp;;
@@ -490,14 +490,14 @@ function main {
         echo "Please select one of the following options: "
         select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
         case $operation in
-            "$echo_install") operation="install";  installPanamax; break;;
-            "$echo_reinstall") operation="reinstall"; installPanamax; break;;
-            "$echo_restart") operation="restart"; restartPanamax; break;;
-            "$echo_start") operation="start"; startPanamax; break;;
-            "$echo_stop") operation="stop"; stopPanamax; break;;
-            "$echo_checkUpdate") operation="check"; checkForUpdate "u"; break;;
-            "$echo_info")operation="info"; checkForUpdate "e"; break;;
-            "$echo_update") operation="update"; updatePanamax; break;;
+            "$echo_install") operation="install"; checkPreReqs;  installPanamax; break;;
+            "$echo_reinstall") operation="reinstall"; checkPreReqs; installPanamax; break;;
+            "$echo_restart") operation="restart"; checkPreReqs; restartPanamax; break;;
+            "$echo_start") operation="start"; checkPreReqs; startPanamax; break;;
+            "$echo_stop") operation="stop"; checkPreReqs; stopPanamax; break;;
+            "$echo_checkUpdate") operation="check"; checkPreReqs; checkForUpdate "u"; break;;
+            "$echo_info")operation="info"; checkPreReqs; checkForUpdate "e"; break;;
+            "$echo_update") operation="update"; checkPreReqs; updatePanamax; break;;
             "$echo_uninstall") operation="uninstall"; uninstallPanamax; break;;
             "$echo_help")showLongHelp; break;;
             "$echo_ssh") sshToPanamax;;
