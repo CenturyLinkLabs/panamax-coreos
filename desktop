@@ -159,7 +159,7 @@ function checkForPanamaxUpdate {
                 updateAvailableForPmx="1"
             elif [[ "$1" == "e" ]]; then
                 echo "Local Panamax component versions:"
-                echo "   UI: $PMX_PMX_INSTALL_TAG_UI"
+                echo "   UI: $PMX_INSTALL_TAG_UI"
                 echo "  API: $PMX_INSTALL_TAG_API"
             fi
         fi
@@ -195,7 +195,7 @@ function saveVersionInfo {
     setEnvVar "PMX_SETUP_VERSION" "\"$(<$CWD\.version)\""
     setEnvVar "PMX_INSTALL_DATE" "\"`date +%s`\""
     if [[ "$PMX_IMAGE_TAG" == "stable" ]]; then
-        setEnvVar "PMX_PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
+        setEnvVar "PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
         setEnvVar "PMX_INSTALL_TAG_API" "`getLatestVersion  \"$(getTagsApi)\"`"
     fi
     setEnvVar "PMX_IMAGE_TAG" "$PMX_IMAGE_TAG"
