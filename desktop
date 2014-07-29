@@ -4,7 +4,7 @@ PMX_PORT_UI=8888
 PMX_PORT_API=8889
 BASEBOX_DEFAULT="panamax-coreos-box-367"
 BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_production_vagrant.box"
-IMAGE_TAG_DEFAULT=stable
+PMX_IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
 SETUP_UPDATE_URL="http://panamax.io/documentation/"
@@ -107,17 +107,17 @@ function checkForSetupUpdate {
         if [[ -f $ENV ]]; then
             source $ENV
             versionList=`curl -sL $SETUP_UPDATE_URL | grep zip`
-            local newVersionAvailable="`newerVersionAvailable $SETUP_VERSION $versionList`"
+            local newVersionAvailable="`newerVersionAvailable $PMX_SETUP_VERSION $versionList`"
             
             if [[ "$newVersionAvailable" == "1" ]]; then
               echo "Local Panamax Installer version:"
-              echo "$SETUP_VERSION"
+              echo "$PMX_SETUP_VERSION"
               echo ""
               echo "*** Panamax Installer is out of date! Please run (brew upgrade panamax, and panamax reinstall) to update. ***"
               updateAvailableForSetup="1"
             elif [[ "$1" == "e" ]]; then
               echo "Local Panamax Installer version:"
-              echo "  $SETUP_VERSION"
+              echo "  $PMX_SETUP_VERSION"
               echo ""
             fi
         else
@@ -132,8 +132,8 @@ function checkForPanamaxUpdate {
        updateAvailableForPmx="0"
        if [[ -f $ENV ]]; then
         source $ENV
-        if [[ "$IMAGE_TAG" == "dev" ]]; then
-            if [[ "$INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
+        if [[ "$PMX_IMAGE_TAG" == "dev" ]]; then
+            if [[ "$PMX_INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
                 echo "You are currently running a Dev version of Panamax which is updated nightly."
                 echo "A newer Dev version is available. Use the update option to get the latest Dev version."
                 updateAvailableForPmx="1"
@@ -143,13 +143,13 @@ function checkForPanamaxUpdate {
                 echo "  API: dev nightly build"
             fi
 
-        elif [[ "$INSTALL_TAG_UI" != "" || "$INSTALL_TAG_API" != "" || "$1" == "e" ]]; then
-            latestTagUi="`getLatestVersion $INSTALL_TAG_UI \"$(getTagsUi)\"`"
-            latestTagApi="`getLatestVersion $INSTALL_TAG_API \"$(getTagsApi)\"`"
-            if [[ "$INSTALL_TAG_UI" != "$latestTagUi" || "$INSTALL_TAG_API" != "$latestTagApi" ]]; then
+        elif [[ "$PMX_INSTALL_TAG_UI" != "" || "$PMX_INSTALL_TAG_API" != "" || "$1" == "e" ]]; then
+            latestTagUi="`getLatestVersion $PMX_INSTALL_TAG_UI \"$(getTagsUi)\"`"
+            latestTagApi="`getLatestVersion $PMX_INSTALL_TAG_API \"$(getTagsApi)\"`"
+            if [[ "$PMX_INSTALL_TAG_UI" != "$latestTagUi" || "$PMX_INSTALL_TAG_API" != "$latestTagApi" ]]; then
                 echo "Local Panamax component versions:"
-                echo "   UI: $INSTALL_TAG_UI"
-                echo "  API: $INSTALL_TAG_API"
+                echo "   UI: $PMX_INSTALL_TAG_UI"
+                echo "  API: $PMX_INSTALL_TAG_API"
                 echo "Latest Panamax component versions:"
                 echo "   UI: $latestTagUi"
                 echo "  API: $latestTagApi"
@@ -159,8 +159,8 @@ function checkForPanamaxUpdate {
                 updateAvailableForPmx="1"
             elif [[ "$1" == "e" ]]; then
                 echo "Local Panamax component versions:"
-                echo "   UI: $INSTALL_TAG_UI"
-                echo "  API: $INSTALL_TAG_API"
+                echo "   UI: $PMX_PMX_INSTALL_TAG_UI"
+                echo "  API: $PMX_INSTALL_TAG_API"
             fi
         fi
       else
@@ -192,13 +192,13 @@ function runVagrant {
 }
 
 function saveVersionInfo {
-    setEnvVar "SETUP_VERSION" "\"$(<$CWD\.version)\""
-    setEnvVar "INSTALL_DATE" "\"`date +%s`\""
-    if [[ "$IMAGE_TAG" == "stable" ]]; then
-        setEnvVar "INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
-        setEnvVar "INSTALL_TAG_API" "`getLatestVersion  \"$(getTagsApi)\"`"
+    setEnvVar "PMX_SETUP_VERSION" "\"$(<$CWD\.version)\""
+    setEnvVar "PMX_INSTALL_DATE" "\"`date +%s`\""
+    if [[ "$PMX_IMAGE_TAG" == "stable" ]]; then
+        setEnvVar "PMX_PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
+        setEnvVar "PMX_INSTALL_TAG_API" "`getLatestVersion  \"$(getTagsApi)\"`"
     fi
-    setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
+    setEnvVar "PMX_IMAGE_TAG" "$PMX_IMAGE_TAG"
 }
 
 function installPanamax {
@@ -221,7 +221,7 @@ function installPanamax {
         read -p "Enter CPUs to be allocated to Panamax VM($PMX_VM_CPUS_DEFAULT):" panamaxCpus
         read -p "Enter default UI port($PMX_PORT_UI):"  panamaxPortUi
         read -p "Enter default API port($PMX_PORT_API):"  panamaxPortApi
-        read -p "Enter version you want to use(dev/stable, defaults to:$IMAGE_TAG_DEFAULT)" panamaxVersion
+        read -p "Enter version you want to use(dev/stable, defaults to:$PMX_IMAGE_TAG_DEFAULT)" panamaxVersion
         echo ""
     fi
 
@@ -230,27 +230,27 @@ function installPanamax {
     panamaxPortUi=${panamaxPortUi:-$PMX_PORT_UI}
     panamaxPortApi=${panamaxPortApi:-$PMX_PORT_API}
     redownload=${download:-N}
-    IMAGE_TAG=${panamaxVersion:-${IMAGE_TAG:-$IMAGE_TAG_DEFAULT}}
+    PMX_IMAGE_TAG=${panamaxVersion:-${PMX_IMAGE_TAG:-$PMX_IMAGE_TAG_DEFAULT}}
 
     if [ ! -d "$CWD" ]; then
         mkdir -p $CWD
         cp -Rf . $CWD > /dev/null
     fi
     
-    if [[ "$BASEBOX" != "" && "$BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
+    if [[ "$PMX_BASEBOX" != "" && "$PMX_BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
         vagrant box remove $BASEBOX
     fi
     setEnvVar "PMX_PORT_UI" $panamaxPortUi
     setEnvVar "PMX_PORT_API" $panamaxPortApi
-    setEnvVar "BASEBOX" \"$BASEBOX_DEFAULT\"
-    setEnvVar "BASEBOX_URL" \"$BASEBOX_URL_DEFAULT\"
+    setEnvVar "PMX_BASEBOX" \"$BASEBOX_DEFAULT\"
+    setEnvVar "PMX_BASEBOX_URL" \"$BASEBOX_URL_DEFAULT\"
     setEnvVar "PMX_VM_MEMORY" $panamaxRam
     setEnvVar "PMX_VM_CPUS" $panamaxCpus
     saveVersionInfo
-    setEnvVar "OPERATION" "$operation"
+    setEnvVar "PMX_OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
-    if [[ "$PANAMAX_ID" == "" ]]; then
-       setEnvVar "PANAMAX_ID" "\"`uuidgen`\""
+    if [[ "$PMX_PANAMAX_ID" == "" ]]; then
+       setEnvVar "PMX_PANAMAX_ID" "\"`uuidgen`\""
     fi
     source $ENV
 
@@ -306,7 +306,8 @@ function createPmxVM {
 
 
 function setEnvVar {
-    echo $"`sed  "/$1=/d" $ENV`" > $ENV
+    local envVarName=`echo "$1" | sed 's/[PMX_]+//g'`
+    echo $"`sed  "/$envVarName=/d" $ENV`" > $ENV
     echo export $1=$2 >> $ENV
 }
 
@@ -326,7 +327,7 @@ function openPanamax {
 
 function restartPanamax {
     echo Restarting Panamax
-    setEnvVar "OPERATION" "$operation"
+    setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
     runVagrant reload --provision || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     openPanamax;
@@ -335,7 +336,7 @@ function restartPanamax {
 
 function startPanamax {
     echo Starting Panamax
-    setEnvVar "OPERATION" "$operation"
+    setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
     runVagrant reload --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
     openPanamax
@@ -344,15 +345,15 @@ function startPanamax {
 
 function stopPanamax {
     echo Stopping Panamax
-    setEnvVar "OPERATION" "$operation"
+    setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
     runVagrant halt || { echo >&2 "Stopping Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     echo Panamax stopped.
 }
 
 function updatePanamax {
-    setEnvVar "OPERATION" "$operation"
-    setEnvVar "IMAGE_TAG" "$IMAGE_TAG"
+    setEnvVar "PMX_OPERATION" "$operation"
+    setEnvVar "PMX_IMAGE_TAG" "$PMX_IMAGE_TAG"
     source $ENV
     checkForPanamaxUpdate
     if [[ $updateAvailableForPmx == "1" ]]; then
@@ -368,7 +369,7 @@ function updatePanamax {
 }
 
 function uninstallPanamax {
-  setEnvVar "OPERATION" "$operation"
+  setEnvVar "PMX_OPERATION" "$operation"
   echo Uninstalling Panamax
   runVagrant destroy -f
   vagrant box remove $BASEBOX
@@ -396,10 +397,10 @@ function readParams {
     do
     case `echo $i | tr '[:upper:]' '[:lower:]'` in
         --dev)
-        IMAGE_TAG=dev
+        PMX_IMAGE_TAG=dev
         ;;
         --stable)
-        IMAGE_TAG=stable
+        PMX_IMAGE_TAG=stable
         ;;
         --memory=*)
         panamaxRam="${i#*=}"
