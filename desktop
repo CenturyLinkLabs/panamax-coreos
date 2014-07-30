@@ -7,7 +7,8 @@ BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_
 PMX_IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-ui/tags"
 PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
-SETUP_UPDATE_URL="http://panamax.io/documentation/"
+SETUP_UPDATE_URL="http://download.panamax.io/installer/"
+DOCUMENTATION_URL="http://panamax.io/documentation/"
 CWD="${HOME}/.panamax/"
 ENV=$CWD.env
 IMAGES_VDI="$CWD"images.vdi
@@ -154,7 +155,7 @@ function checkForPanamaxUpdate {
                 echo "   UI: $latestTagUi"
                 echo "  API: $latestTagApi"
                 echo ""
-                echo "*** Panamax is out of date! Please use the download/update option to get the latest. Release notes are available at ($SETUP_UPDATE_URL) . ***"
+                echo "*** Panamax is out of date! Please use the download/update option to get the latest. Release notes are available at ($DOCUMENTATION_URL) . ***"
                 echo ""
                 updateAvailableForPmx="1"
             elif [[ "$1" == "e" ]]; then
@@ -238,7 +239,7 @@ function installPanamax {
     fi
     
     if [[ "$PMX_BASEBOX" != "" && "$PMX_BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
-        vagrant box remove $BASEBOX
+        vagrant box remove $PMX_BASEBOX
     fi
     setEnvVar "PMX_PORT_UI" $panamaxPortUi
     setEnvVar "PMX_PORT_API" $panamaxPortApi
@@ -266,7 +267,7 @@ function installPanamax {
         fi
         runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
         if [[ $redownload == "Y" ]]; then
-            vagrant box update --box $BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
+            vagrant box update --box $PMX_BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
         fi
         createPmxVM
     else
@@ -294,8 +295,8 @@ function createPmxVM {
                 download_complete=$?
             done    
         fi
+        tar -zxf "$IMAGES_ZIP" -C $CWD
     fi
-    tar -zxf "$IMAGES_ZIP" -C $CWD
     if [[ ! -f "$IMAGES_VDI" ]]; then
         echo "Error downloading images disk. Please try again later."
         exit 1;
@@ -372,7 +373,7 @@ function uninstallPanamax {
   setEnvVar "PMX_OPERATION" "$operation"
   echo Uninstalling Panamax
   runVagrant destroy -f
-  vagrant box remove $BASEBOX
+  vagrant box remove $PMX_BASEBOX
   echo Uninstall complete.
 }
 
