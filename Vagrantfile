@@ -4,8 +4,8 @@ imagesDisk = 'images.vdi'
 
 Vagrant.configure("2") do |config|
     Vagrant.require_version ">= 1.6.0"
-    config.vm.box = ENV['BASEBOX'] || "panamax-coreos-box"
-    config.vm.box_url = ENV['BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/310.1.0/coreos_production_vagrant.box"
+    config.vm.box = ENV['PMX_BASEBOX'] || "panamax-coreos-box"
+    config.vm.box_url = ENV['PMX_BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_production_vagrant.box"
     config.vm.hostname = ENV['PMX_VM_NAME'] || "panamax-vm"
 
     config.vm.network "forwarded_port", guest: 3000, host: Integer(ENV['PMX_PORT_UI']||8888)
@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
         config.vm.provision "shell", inline: "cd /var/panamax && ./create-docker-mount"
     end
     config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/coreos"
-    config.vm.provision "shell", inline: "cd /var/panamax && ./coreos $1 --$2 -pid=\"$3\"", args: "#{ENV['OPERATION'] || 'install'} #{ENV['IMAGE_TAG'] || 'stable'} #{ENV['PANAMAX_ID'] || 'not-set'} "
+    config.vm.provision "shell", inline: "cd /var/panamax && ./coreos $1 --$2 -pid=\"$3\"", args: "#{ENV['PMX_OPERATION'] || 'install'} #{ENV['PMX_IMAGE_TAG'] || 'stable'} #{ENV['PMX_PANAMAX_ID'] || 'not-set'} "
     config.vm.synced_folder ".", "/vagrant", disabled: true
     config.ssh.username = "core"
 end
