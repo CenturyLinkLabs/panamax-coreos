@@ -81,7 +81,7 @@ function installPanamax {
     sudo rm -f units/*
     writeUnitFiles
     sudo cp units/* /etc/systemd/system/
-    sudo cp scripts/* /etc/systemd/user
+    sudo cp -f scripts/* /etc/systemd/user 2>/dev/null
     downloadPmxImages
     operatePanamax enable
     operatePanamax start
@@ -148,16 +148,13 @@ function startCoreOSServices {
    sudo systemctl mask update-engine-reboot-manager.service
    sudo systemctl stop update-engine.service
    sudo systemctl mask update-engine.service
-   sudo systemctl enable etcd
-   sudo systemctl start etcd
-   sudo systemctl enable fleet.service
-   sudo systemctl start fleet.service
-   sudo systemctl enable systemd-journal-gatewayd.socket
-   sudo systemctl start systemd-journal-gatewayd.socket
+   sudo systemctl enable etcd fleet systemd-journal-gatewayd.socket
+   sudo systemctl restart etcd fleet systemd-journal-gatewayd.socket
 }
 
 function restartPanamax {
   echo "Restarting Panamax"
+  startCoreOSServices
   operatePanamax restart
   waitUntilStarted
   echo "Panamax restarted"
@@ -166,6 +163,7 @@ function restartPanamax {
 function stopPanamax {
   echo Stopping Panamax
   operatePanamax stop
+  startCoreOSServices
   echo Panamax Stopped.
 }
 
