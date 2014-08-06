@@ -1,7 +1,8 @@
 #! /bin/bash
 
 CWD=`pwd`
-source $CWD/.coreosenv
+ENV="$CWD/.coreosenv"
+source $ENV
 
 function operatePanamax {
  sudo systemctl $1 panamax-metrics.service
@@ -77,6 +78,11 @@ function downloadPmxImages {
 function installPanamax {
     echo "Installing Panamax..."
     startCoreOSServices
+    if [[ -z "$PANAMAX_ID" ]]; then
+      PANAMAX_ID=`uuidgen`
+      echo "" >> $ENV
+      echo "PANAMAX_ID=\"$PANAMAX_ID\"" >> $ENV
+    fi
     sudo mkdir -p units
     sudo rm -f units/*
     writeUnitFiles
@@ -88,6 +94,7 @@ function installPanamax {
     waitUntilStarted
     echo "Panamax install complete"
 }
+
 
 function writeUnitFiles {
  echo "[Unit]
