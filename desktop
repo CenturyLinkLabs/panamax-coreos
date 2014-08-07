@@ -10,7 +10,8 @@ PMX_API_TAGS="http://74.201.240.198:5000/v1/repositories/panamax-api/tags"
 SETUP_UPDATE_URL="http://download.panamax.io/installer/"
 DOCUMENTATION_URL="http://panamax.io/documentation/"
 CWD="${HOME}/.panamax/"
-ENV=$CWD.env
+ENV=$CWD.env_tmp
+ENV_COMMIT=$CWD.env
 IMAGES_VDI="$CWD"images.vdi
 IMAGES_ZIP="$CWD"images.tar.gz
 IMAGES_CDN="http://download.panamax.io/images.tar.gz"
@@ -327,15 +328,18 @@ function openPanamax {
 }
 
 function restartPanamax {
+    set -x
     echo Restarting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
-    runVagrant reload --provision || { echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+    runVagrant reload --provision || {  echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+    echo $?
     openPanamax;
     echo Restart complete
 }
 
 function startPanamax {
+    set -x
     echo Starting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
@@ -464,7 +468,8 @@ function readParams {
 }
 
 function main {
-    if [[ -f $ENV ]]; then
+    if [[ -f $ENV_COMMIT ]]; then
+        cp $ENV_COMMIT $ENV
         source $ENV
     else
         touch $ENV
@@ -508,6 +513,7 @@ function main {
         done
     fi
     checkForUpdate
+    mv $ENV $ENV_COMMIT
     exit 0;
 }
 
