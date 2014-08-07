@@ -4,7 +4,7 @@ installer='pmx-installer-latest.zip'
 destination=~/.panamax
 curl -O "http://download.panamax.io/installer/$installer"
 unzip  -ou ${installer}  -d ${destination}
-cp ${destination}/panamax /usr/bin
-panamax
+sudo ln -s ~/.panamax/panamax /usr/local/bin/panamax
+panamax init
 #echo "Execute panamax and select to continue."
 
