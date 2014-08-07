@@ -267,7 +267,9 @@ function installPanamax {
         fi
         runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
         if [[ $redownload == "Y" ]]; then
-            vagrant box update --box $PMX_BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
+            vagrant box remove $PMX_BASEBOX
+            vagrant box add $PMX_BASEBOX $PMX_BASEBOX_URL
+            #vagrant box update --box $PMX_BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
         fi
         createPmxVM
     else
