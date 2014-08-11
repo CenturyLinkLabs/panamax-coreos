@@ -7,7 +7,7 @@ BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_
 PMX_IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="https://index.docker.io/v1/repositories/cakkineni/panamax-ui/tags"
 PMX_API_TAGS="https://index.docker.io/v1/repositories/cakkineni/panamax-api/tags"
-SETUP_UPDATE_URL="http://download.panamax.io/installer/"
+SETUP_UPDATE_URL="http://download.panamax.io/installer/.versions"
 DOCUMENTATION_URL="http://panamax.io/documentation/"
 CWD="${HOME}/.panamax/"
 ENV=$CWD.env_tmp
@@ -95,7 +95,7 @@ function newerVersionAvailable() {
     local newVerAvailable=0
     if [[ "`echo $vList | grep "$majVer.$minVer.$nextPatVer"`" != "" \
         || "`echo $vList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" \
-        || "`echo $vList | grep "$nextMajVer\.[0-9]*\.[0-9]*"`" != "" ]]; then
+        || "`echo $vList | grep "$nextMajVer\.[0-9]+\.[0-9]+"`" != "" ]]; then
       newVerAvailable=1
     fi
     echo $newVerAvailable
@@ -109,8 +109,7 @@ function checkForSetupUpdate {
         if [[ -f $ENV ]]; then
             source $ENV
             versionList=`curl -sL $SETUP_UPDATE_URL | grep zip`
-            local newVersionAvailable="`newerVersionAvailable $PMX_SETUP_VERSION $versionList`"
-            
+            local newVersionAvailable="`newerVersionAvailable $PMX_SETUP_VERSION \"$versionList\"`"
             if [[ "$newVersionAvailable" == "1" ]]; then
               echo "Local Panamax Installer version:"
               echo "$PMX_SETUP_VERSION"
