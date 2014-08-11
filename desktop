@@ -324,7 +324,7 @@ function openPanamax {
 
     echo ""
     open "http://localhost:$PMX_PORT_UI" || { echo "Please go to http://localhost:$PMX_PORT_UI" to access panamax; }
-    echo "Please go to http://localhost:$PMX_PORT_UI" to access panamax."
+    echo "Please go to http://localhost:$PMX_PORT_UI to access panamax."
     echo ""
     echo ""
 }
