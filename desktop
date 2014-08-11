@@ -260,17 +260,16 @@ function installPanamax {
         echo ""
         echo "Reinstalling Panamax..."
         if [[ "$#" == "0" ]]; then
-            read -p "Would you like to re-download coreos base box(N): " redownload
+            read -p "Would you like to re-download coreos base box[y/N]: " redownload
         fi
         if [[ -f "$IMAGES_VDI" ]]; then
             runVagrant halt
             VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
         fi
         runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
-        if [[ $redownload == "Y" ]]; then
+        if [[ $redownload == "Y" || $redownload == "y" ]]; then
             vagrant box remove $PMX_BASEBOX
             vagrant box add $PMX_BASEBOX $PMX_BASEBOX_URL
-            #vagrant box update --box $PMX_BASEBOX || { echo "Vagrant box remove failed. Exiting."; exit 1; }
         fi
         createPmxVM
     else
@@ -324,7 +323,8 @@ function openPanamax {
     done
 
     echo ""
-    open "http://localhost:$PMX_PORT_UI" || { echo "Please goto http://localhost:$PMX_PORT_UI"; }
+    open "http://localhost:$PMX_PORT_UI" || { echo "Please go to http://localhost:$PMX_PORT_UI" to access panamax; }
+    echo "Please go to http://localhost:$PMX_PORT_UI" to access panamax."
     echo ""
     echo ""
 }
