@@ -28,7 +28,7 @@ echo_info="info:          Displays version of your local panamax install."
 echo_stop="pause:         Stops Panamax"
 echo_start="up:            Starts Panamax"
 echo_uninstall="delete:        Uninstalls Panamax, deletes applications and CoreOS VM."
-echo_ssh="ssh:           Ssh into Panamax CoreOS VM."
+echo_ssh="ssh:           SSH into Panamax CoreOS VM."
 echo_help="help:          Show this help"
 
 function displayLogo {
