@@ -329,7 +329,6 @@ function openPanamax {
 }
 
 function restartPanamax {
-    set -x
     echo Restarting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
@@ -340,7 +339,6 @@ function restartPanamax {
 }
 
 function startPanamax {
-    set -x
     echo Starting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
