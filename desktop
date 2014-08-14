@@ -67,6 +67,14 @@ function checkPreReqs {
     echo ""
 }
 
+function checkPanamaxVmExists {
+    VBoxManage showvminfo $PMX_VM_NAME  > /dev/null 2>&1
+    if [[ "$?" -ne "0" ]]; then
+        echo "The $PMX_VM_NAME does not exist. Please run ($ panamax init) to install Panamax."
+        echo ""
+        exit 1;
+    fi
+}
 
 function getLatestVersion () {
     vList="$@"
@@ -171,6 +179,10 @@ function checkForPanamaxUpdate {
 }
 
 function checkForUpdate {
+    if [[ "$1" == "e" || "$1" == "u" ]]; then
+        checkPreReqs
+        checkPanamaxVmExists
+    fi
     echo ""
     checkForPanamaxUpdate "$1"
     checkForSetupUpdate "$1"
@@ -203,17 +215,14 @@ function saveVersionInfo {
 }
 
 function installPanamax {
+    checkPreReqs
     if [[ "$operation" == "install"  && "`runVagrant status $PMX_VM_NAME --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
         echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
         exit 1;
     fi
 
     if [[ "$operation" == "reinstall" ]]; then
-        VBoxManage showvminfo $PMX_VM_NAME  > /dev/null 2>&1
-        if [[ "$?" -ne "0" ]]; then
-            echo "$PMX_VM_NAME does not exist. Please run init before you can reinstall"
-            exit 1;
-        fi
+        checkPanamaxVmExists
     fi
 
     if [[ $# == 0 ]]; then
@@ -329,6 +338,8 @@ function openPanamax {
 }
 
 function restartPanamax {
+    checkPreReqs
+    checkPanamaxVmExists
     echo Restarting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
@@ -339,6 +350,8 @@ function restartPanamax {
 }
 
 function startPanamax {
+    checkPreReqs
+    checkPanamaxVmExists
     echo Starting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
@@ -348,6 +361,8 @@ function startPanamax {
 }
 
 function stopPanamax {
+    checkPreReqs
+    checkPanamaxVmExists
     echo Stopping Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source $ENV
@@ -356,6 +371,8 @@ function stopPanamax {
 }
 
 function updatePanamax {
+    checkPreReqs
+    checkPanamaxVmExists
     setEnvVar "PMX_OPERATION" "$operation"
     setEnvVar "PMX_IMAGE_TAG" "$PMX_IMAGE_TAG"
     source $ENV
@@ -373,15 +390,17 @@ function updatePanamax {
 }
 
 function uninstallPanamax {
-  setEnvVar "PMX_OPERATION" "$operation"
-  echo Uninstalling Panamax
-  runVagrant destroy -f
-  vagrant box remove $PMX_BASEBOX
-  echo Uninstall complete.
+    checkPreReqs
+    checkPanamaxVmExists
+    setEnvVar "PMX_OPERATION" "$operation"
+    echo Uninstalling Panamax
+    runVagrant destroy -f
+    vagrant box remove $PMX_BASEBOX
+    echo Uninstall complete.
 }
 
 function sshToPanamax {
-  runVagrant ssh
+    runVagrant ssh
 }
 
 function showShortHelp {
@@ -479,14 +498,14 @@ function main {
 
     if [[ $# -gt 0 ]]; then
         case $operation in
-            install)   checkPreReqs; installPanamax "$@" || { showHelp; exit 1; } ;;
-            reinstall)   checkPreReqs; installPanamax "$@" || { showHelp; exit 1; } ;;
-            restart) checkPreReqs; restartPanamax;;
-            stop) checkPreReqs; stopPanamax;;
-            start) checkPreReqs; startPanamax;;
-            check) checkPreReqs; checkForUpdate "u";;
-            info) checkPreReqs; checkForUpdate "e";;
-            update) checkPreReqs; updatePanamax;;
+            install)   installPanamax "$@" || { showHelp; exit 1; } ;;
+            reinstall)   installPanamax "$@" || { showHelp; exit 1; } ;;
+            restart) restartPanamax;;
+            stop) stopPanamax;;
+            start) startPanamax;;
+            check) checkForUpdate "u";;
+            info) checkForUpdate "e";;
+            update) updatePanamax;;
             uninstall) uninstallPanamax;;
             ssh) sshToPanamax;;
             *) showLongHelp;;
@@ -496,14 +515,14 @@ function main {
         echo "Please select one of the following options: "
         select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
         case $operation in
-            "$echo_install") operation="install"; checkPreReqs;  installPanamax; break;;
-            "$echo_reinstall") operation="reinstall"; checkPreReqs; installPanamax; break;;
-            "$echo_restart") operation="restart"; checkPreReqs; restartPanamax; break;;
-            "$echo_start") operation="start"; checkPreReqs; startPanamax; break;;
-            "$echo_stop") operation="stop"; checkPreReqs; stopPanamax; break;;
-            "$echo_checkUpdate") operation="check"; checkPreReqs; checkForUpdate "u"; break;;
-            "$echo_info")operation="info"; checkPreReqs; checkForUpdate "e"; break;;
-            "$echo_update") operation="update"; checkPreReqs; updatePanamax; break;;
+            "$echo_install") operation="install";  installPanamax; break;;
+            "$echo_reinstall") operation="reinstall"; installPanamax; break;;
+            "$echo_restart") operation="restart"; restartPanamax; break;;
+            "$echo_start") operation="start"; startPanamax; break;;
+            "$echo_stop") operation="stop"; stopPanamax; break;;
+            "$echo_checkUpdate") operation="check"; checkForUpdate "u"; break;;
+            "$echo_info")operation="info"; checkForUpdate "e"; break;;
+            "$echo_update") operation="update"; updatePanamax; break;;
             "$echo_uninstall") operation="uninstall"; uninstallPanamax; break;;
             "$echo_help")showLongHelp; break;;
             "$echo_ssh") sshToPanamax;;
