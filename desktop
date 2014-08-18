@@ -493,7 +493,7 @@ function main {
         esac
     
     else
-        echo "Please select one of the following options: "
+        PS3="Please select one of the preceding options: "
         select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
         case $operation in
             "$echo_install") operation="install"; checkPreReqs;  installPanamax; break;;
