@@ -16,7 +16,7 @@ IMAGES_VDI="$CWD"images.vdi
 IMAGES_ZIP="$CWD"images.tar.gz
 IMAGES_CDN="http://download.panamax.io/images.tar.gz"
 PMX_VM_NAME="panamax-vm"
-PMX_VM_MEMORY_DEFAULT=1024
+PMX_VM_MEMORY_DEFAULT=1536
 PMX_VM_CPUS_DEFAULT=2
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
@@ -57,7 +57,7 @@ function checkPreReqs {
         echo $'Vagrant 1.6 or newer installed.'
     fi
 
-    virtualbox --help 2>&1 >/dev/null
+    VBoxManage -v | grep -w '4\.[3-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
         echo "Please install Virtualbox (https://www.virtualbox.org/wiki/Downloads).";
         exit 1;
@@ -512,7 +512,7 @@ function main {
         esac
     
     else
-        echo "Please select one of the following options: "
+        PS3="Please select one of the preceding options: "
         select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
         case $operation in
             "$echo_install") operation="install";  installPanamax; break;;
