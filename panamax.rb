@@ -7,7 +7,7 @@ class Panamax < Formula
 
   def install
     cachedir = HOMEBREW_CACHE + "panamax-#{version}.zip"
-    `unzip  -ou #{cachedir}  -d #{ENV['HOME']}/.panamax`
+    `unzip  -ou "#{cachedir}"  -d "#{ENV['HOME']}/.panamax"`
     bin.install "panamax"
     opoo "If upgrading the Panamax Installer, be sure to run 'panamax reinstall' to ensure compatibility with other Panamax components."
   end
