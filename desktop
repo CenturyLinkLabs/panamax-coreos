@@ -10,8 +10,8 @@ PMX_API_TAGS="https://index.docker.io/v1/repositories/centurylink/panamax-api/ta
 SETUP_UPDATE_URL="http://download.panamax.io/installer/.versions"
 DOCUMENTATION_URL="https://github.com/CenturyLinkLabs/panamax-ui/wiki/Release-Notes"
 CWD="${HOME}/.panamax/"
-ENV=$CWD.env_tmp
-ENV_COMMIT=$CWD.env
+ENV="$CWD".env_tmp
+ENV_COMMIT="$CWD".env
 IMAGES_VDI="$CWD"images.vdi
 IMAGES_ZIP="$CWD"images.tar.gz
 IMAGES_CDN="http://download.panamax.io/images.tar.gz"
@@ -115,8 +115,8 @@ function checkForSetupUpdate {
     if [[ "$checkedSetupForUpdates" != "1" || "$1" == "u" ]]; then
         checkedSetupForUpdates="1"
         updateAvailableForSetup="0"
-        if [[ -f $ENV ]]; then
-            source $ENV
+        if [[ -f "$ENV" ]]; then
+            source "$ENV"
             versionList=`curl -sL $SETUP_UPDATE_URL | grep zip`
             local newVersionAvailable="`newerVersionAvailable $PMX_SETUP_VERSION \"$versionList\"`"
             if [[ "$newVersionAvailable" == "1" ]]; then
@@ -140,8 +140,8 @@ function checkForPanamaxUpdate {
    if [[ "$checkedPmxForUpdates" != "1" || "$1" == "u" ]]; then
        checkedPmxForUpdates="1"
        updateAvailableForPmx="0"
-       if [[ -f $ENV ]]; then
-        source $ENV
+       if [[ -f "$ENV" ]]; then
+        source "$ENV"
         if [[ "$PMX_IMAGE_TAG" == "dev" ]]; then
             if [[ "$PMX_INSTALL_DATE" -le "` date -j -v-1d +%s`" ]]; then
                 echo "You are currently running a Dev version of Panamax which is updated nightly."
@@ -202,11 +202,11 @@ function getTagsApi {
 }
 
 function runVagrant {
-   cd $CWD && vagrant "$@"
+   cd "$CWD" && vagrant "$@"
 }
 
 function saveVersionInfo {
-    setEnvVar "PMX_SETUP_VERSION" "\"$(<$CWD\.version)\""
+    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWDs.version")\""
     setEnvVar "PMX_INSTALL_DATE" "\"`date +%s`\""
     if [[ "$PMX_IMAGE_TAG" == "stable" ]]; then
         setEnvVar "PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
@@ -244,8 +244,8 @@ function installPanamax {
     PMX_IMAGE_TAG=${panamaxVersion:-${PMX_IMAGE_TAG:-$PMX_IMAGE_TAG_DEFAULT}}
 
     if [ ! -d "$CWD" ]; then
-        mkdir -p $CWD
-        cp -Rf . $CWD > /dev/null
+        mkdir -p "$CWD"
+        cp -Rf . "$CWD" > /dev/null
     fi
     
     if [[ "$PMX_BASEBOX" != "" && "$PMX_BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
@@ -263,7 +263,7 @@ function installPanamax {
     if [[ "$PMX_PANAMAX_ID" == "" ]]; then
        setEnvVar "PMX_PANAMAX_ID" "\"`uuidgen`\""
     fi
-    source $ENV
+    source "$ENV"
 
     if [[  $operation == "reinstall" ]]; then
         echo ""
@@ -292,7 +292,7 @@ function createPmxVM {
     echo "Creating a new CoreOS VM..."
     if [[ ! -f "$IMAGES_VDI" ]]; then
         if [[ -f "$IMAGES_ZIP" ]]; then 
-            tar -zxf "$IMAGES_ZIP" -C $CWD
+            tar -zxf "$IMAGES_ZIP" -C "$CWD"
             download_complete=$?
         fi
         if [[ "$download_complete" != "0" || ! -f "$IMAGES_ZIP" ]]; then    
@@ -300,27 +300,27 @@ function createPmxVM {
             download_complete="-1"
             until [ "$download_complete"  == "0" ];
             do
-                curl -C -  $IMAGES_CDN -o $IMAGES_ZIP --progress-bar
+                curl -C -  $IMAGES_CDN -o "$IMAGES_ZIP" --progress-bar
                 sleep 2
                 tar -tzf "$IMAGES_ZIP" >/dev/null
                 download_complete=$?
             done    
         fi
-        tar -zxf "$IMAGES_ZIP" -C $CWD
+        tar -zxf "$IMAGES_ZIP" -C "$CWD"
     fi
     if [[ ! -f "$IMAGES_VDI" ]]; then
         echo "Error downloading images disk. Please try again later."
         exit 1;
     fi
     runVagrant up --provider virtualbox || { echo "VM Creation failed. Exiting."; exit 1; }
-    rm -f $IMAGES_ZIP
+    rm -f "$IMAGES_ZIP"
 }
 
 
 function setEnvVar {
     local envVarName=`echo "$1" | sed 's/[PMX_]+//g'`
-    echo $"`sed  "/$envVarName=/d" $ENV`" > $ENV
-    echo export $1=$2 >> $ENV
+    echo $"`sed  "/$envVarName=/d" "$ENV"`" > "$ENV"
+    echo export $1=$2 >> "$ENV"
 }
 
 function openPanamax {
@@ -343,7 +343,7 @@ function restartPanamax {
     checkPanamaxVmExists
     echo Restarting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
-    source $ENV
+    source "$ENV"
     runVagrant reload --provision || {  echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     echo $?
     openPanamax;
@@ -355,7 +355,7 @@ function startPanamax {
     checkPanamaxVmExists
     echo Starting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
-    source $ENV
+    source "$ENV"
     runVagrant reload --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
     openPanamax
     echo Start Complete
@@ -366,7 +366,7 @@ function stopPanamax {
     checkPanamaxVmExists
     echo Stopping Panamax
     setEnvVar "PMX_OPERATION" "$operation"
-    source $ENV
+    source "$ENV"
     runVagrant halt || { echo >&2 "Stopping Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     echo Panamax stopped.
 }
@@ -376,7 +376,7 @@ function updatePanamax {
     checkPanamaxVmExists
     setEnvVar "PMX_OPERATION" "$operation"
     setEnvVar "PMX_IMAGE_TAG" "$PMX_IMAGE_TAG"
-    source $ENV
+    source "$ENV"
     checkForPanamaxUpdate
     if [[ $updateAvailableForPmx == "1" ]]; then
         echo Updating Panamax
@@ -495,11 +495,11 @@ function readParams {
 }
 
 function main {
-    if [[ -f $ENV_COMMIT ]]; then
-        cp $ENV_COMMIT $ENV
-        source $ENV
+    if [[ -f "$ENV_COMMIT" ]]; then
+        cp "$ENV_COMMIT" "$ENV"
+        source "$ENV"
     else
-        touch $ENV
+        touch "$ENV"
     fi
     displayLogo
     
@@ -542,7 +542,7 @@ function main {
         done
     fi
     checkForUpdate
-    mv $ENV $ENV_COMMIT
+    mv "$ENV" "$ENV_COMMIT"
     exit 0;
 }
 
