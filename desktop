@@ -30,7 +30,7 @@ echo_start="up:            Starts Panamax"
 echo_uninstall="delete:        Uninstalls Panamax, deletes applications and CoreOS VM."
 echo_ssh="ssh:           SSH into Panamax CoreOS VM."
 echo_help="help:          Show this help"
-echo_debug="debug:         Print your current settings."
+echo_debug="debug:         Display your current Panamax settings."
 
 function displayLogo {
     tput clear
