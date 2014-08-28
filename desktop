@@ -30,6 +30,7 @@ echo_start="up:            Starts Panamax"
 echo_uninstall="delete:        Uninstalls Panamax, deletes applications and CoreOS VM."
 echo_ssh="ssh:           SSH into Panamax CoreOS VM."
 echo_help="help:          Show this help"
+echo_debug="debug:         Display your current Panamax settings."
 
 function displayLogo {
     tput clear
@@ -390,7 +391,6 @@ function updatePanamax {
 }
 
 function uninstallPanamax {
-    checkPreReqs
     checkPanamaxVmExists
     setEnvVar "PMX_OPERATION" "$operation"
     echo Uninstalling Panamax
@@ -401,6 +401,12 @@ function uninstallPanamax {
 
 function sshToPanamax {
     runVagrant ssh
+}
+
+function debug {
+  checkPanamaxVmExists
+  echo "Printing current env settings..."
+  sed 's/export //g' $ENV
 }
 
 function showShortHelp {
@@ -461,6 +467,9 @@ function readParams {
         ssh)
         operation=ssh
         ;;
+        debug)
+        operation=debug
+        ;;
         -op=*|--operation=*)
         operation="${i#*=}"
         ;;
@@ -508,12 +517,13 @@ function main {
             update) updatePanamax;;
             uninstall) uninstallPanamax;;
             ssh) sshToPanamax;;
+            debug) debug;;
             *) showLongHelp;;
         esac
     
     else
         PS3="Please select one of the preceding options: "
-        select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "quit"; do
+        select operation in "$echo_install" "$echo_stop" "$echo_start" "$echo_restart" "$echo_reinstall" "$echo_info" "$echo_checkUpdate" "$echo_update" "$echo_uninstall" "$echo_ssh" "$echo_help" "$echo_debug" "quit"; do
         case $operation in
             "$echo_install") operation="install";  installPanamax; break;;
             "$echo_reinstall") operation="reinstall"; installPanamax; break;;
@@ -526,6 +536,7 @@ function main {
             "$echo_uninstall") operation="uninstall"; uninstallPanamax; break;;
             "$echo_help")showLongHelp; break;;
             "$echo_ssh") sshToPanamax;;
+            "$echo_debug") debug; break;;
             quit) exit 0;;
         esac
         done
