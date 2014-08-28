@@ -339,14 +339,12 @@ function openPanamax {
 }
 
 function savePortForwardingRules {
-    VBoxManage showvminfo $PMX_VM_NAME --machinereadable |  grep 'Forwarding' | awk  -F"=" '{print $2}' | sed 's/\"//g' | sed "s/^/\'/g" | sed "s/,/\',/" > "$CWD.portForwards"
+    VBoxManage showvminfo $PMX_VM_NAME --machinereadable |  grep 'Forwarding' | awk  -F"=" '{print $2}' | sed 's/\"//g' | sed "s/^/VBoxManage controlvm $PMX_VM_NAME natpf1 \'/g" | sed "s/,/\',/" > "$CWD.portForwards.sh"
 }
 
 function recreatePortForwardingRules {
-    while read line
-    do
-        VBoxManage controlvm $PMX_VM_NAME natpf1 $line > /dev/null 2>&1  || true
-    done <"$CWD.portForwards"
+    chmod +x "$CWD.portForwards.sh"
+    /bin/bash -c "cd $CWD && ./.portForwards.sh > /dev/null 2>&1" || true
 }
 
 function restartPanamax {
@@ -370,7 +368,7 @@ function startPanamax {
     setEnvVar "PMX_OPERATION" "$operation"
     source "$ENV"
     savePortForwardingRules
-    runVagrant reload --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
+    runVagrant up --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
     recreatePortForwardingRules
     openPanamax
     echo Start Complete
