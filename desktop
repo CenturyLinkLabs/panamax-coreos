@@ -206,7 +206,7 @@ function runVagrant {
 }
 
 function saveVersionInfo {
-    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWDs.version")\""
+    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWD.version")\""
     setEnvVar "PMX_INSTALL_DATE" "\"`date +%s`\""
     if [[ "$PMX_IMAGE_TAG" == "stable" ]]; then
         setEnvVar "PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getTagsUi)\"`"
@@ -338,13 +338,24 @@ function openPanamax {
     echo ""
 }
 
+function savePortForwardingRules {
+    VBoxManage showvminfo $PMX_VM_NAME --machinereadable |  grep 'Forwarding' | awk  -F"=" '{print $2}' | sed 's/\"//g' | sed "s/^/VBoxManage controlvm $PMX_VM_NAME natpf1 \'/g" | sed "s/,/\',/" > "$CWD.portForwards.sh"
+}
+
+function recreatePortForwardingRules {
+    chmod +x "$CWD.portForwards.sh"
+    /bin/bash -c "cd $CWD && ./.portForwards.sh > /dev/null 2>&1" || true
+}
+
 function restartPanamax {
     checkPreReqs
     checkPanamaxVmExists
     echo Restarting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source "$ENV"
+    savePortForwardingRules
     runVagrant reload --provision || {  echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+    recreatePortForwardingRules
     echo $?
     openPanamax;
     echo Restart complete
@@ -356,7 +367,9 @@ function startPanamax {
     echo Starting Panamax
     setEnvVar "PMX_OPERATION" "$operation"
     source "$ENV"
-    runVagrant reload --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
+    savePortForwardingRules
+    runVagrant up --provision || { echo >&2 "Starting Panamax seems to have failed. Please try again or use reinstall option."; exit 1; }
+    recreatePortForwardingRules
     openPanamax
     echo Start Complete
 }
@@ -380,7 +393,9 @@ function updatePanamax {
     checkForPanamaxUpdate
     if [[ $updateAvailableForPmx == "1" ]]; then
         echo Updating Panamax
+        savePortForwardingRules
         runVagrant reload --provision || { echo >&2 "Updating Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
+        recreatePortForwardingRules
         openPanamax;
         saveVersionInfo
         checkForSetupUpdate
