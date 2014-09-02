@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 -----------------
 ### Added
 - Debug feature
+  - Dumps environment values for Panamax to aid in debugging
+  - Use: $ panamax debug
 
 ### Fixed
 - Port forwarding being reset. (Thanks to rwfowler@gmail.com for issue #39)
