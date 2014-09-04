@@ -63,7 +63,7 @@ function checkPreReqs {
         echo "Please install Virtualbox (https://www.virtualbox.org/wiki/Downloads).";
         exit 1;
     else
-        echo $'Virtualbox 4.2 or newer installed.'
+        echo $'Virtualbox 4.3 or newer installed.'
     fi
     echo ""
 }
