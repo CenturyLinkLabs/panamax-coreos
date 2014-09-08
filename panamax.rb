@@ -1,9 +1,9 @@
 require "formula"
 
 class Panamax < Formula
-  homepage "http://www.panamax.io"
-  url "http://download.panamax.io/installer/pmx-installer-0.1.3.zip"
-  sha1 "73dc66759e406ac5f9e8e9327bb16cd9da990824"
+  homepage "http://www.centurylinklabs.com"
+  url "http://download.panamax.io/installer/pmx-installer-0.1.4.zip"
+  sha1 "d8d729e6230ab983a6edd02c034b96e931c106b9"
 
   def install
     system "make", "install"

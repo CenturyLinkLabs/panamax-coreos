@@ -60,7 +60,7 @@ function checkPreReqs {
 
     VBoxManage -v | grep -w '4\.[3-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
-        echo "Please install Virtualbox (https://www.virtualbox.org/wiki/Downloads).";
+        echo "Please install Virtualbox 4.3 or newer (https://www.virtualbox.org/wiki/Downloads).";
         exit 1;
     else
         echo $'Virtualbox 4.3 or newer installed.'
