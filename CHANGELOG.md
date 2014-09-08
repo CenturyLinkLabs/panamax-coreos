@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+Current
+-----------------
+### Added
+- Core OS 410.0.0
+- CAdvisor 0.2.2
+  - Reduces Panamax Download Size by about ~70%
+
+
 0.1.4 - 2014-09-03
 -----------------
 ### Added
