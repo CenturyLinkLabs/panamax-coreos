@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-Current
+0.2.0 - 2014-09-09
 -----------------
 ### Added
 - Core OS 410.0.0
