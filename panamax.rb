@@ -6,16 +6,16 @@ class Panamax < Formula
   sha1 "d8d729e6230ab983a6edd02c034b96e931c106b9"
 
   def install
-    system "./configure #{prefix}"
-    system "make", "install"
+    cachedir = HOMEBREW_CACHE + "panamax-#{version}.zip"
+    `unzip  -ou #{cachedir}  -d "#{ENV['HOME']}"/.panamax`
     bin.install "panamax"
     opoo "If upgrading the Panamax Installer, be sure to run 'panamax reinstall' to ensure compatibility with other Panamax components."
   end
 
   test do
-    installed = File.exist?("#{prefix}/.panamax")
-    assert installed
-    assert_equal 0, $?.exitstatus
+     installed = File.exist?(ENV['HOME'] + '/.panamax')
+     assert installed
+     assert_equal 0, $?.exitstatus
   end
 
 end
