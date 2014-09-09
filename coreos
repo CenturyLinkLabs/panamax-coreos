@@ -184,6 +184,7 @@ function updatePanamax {
     uninstallPanamax
     installPanamax
     echo Panamax Updated
+    echo "***PLEASE NOTE: If running Panamax on a dedicated CoreOS VM from a cloud provider, please ensure you are running the latest version of CoreOS from the stable branch, to ensure compatibility with Panamax.***"
 }
 
 function openPanamax {
