@@ -1,7 +1,5 @@
 #!/bin/bash
 
-PMX_PORT_UI=8888
-PMX_PORT_API=8889
 BASEBOX_DEFAULT="panamax-coreos-box-410"
 BASEBOX_URL_DEFAULT="http://storage.core-os.net/coreos/amd64-usr/410.0.0/coreos_production_vagrant.box"
 PMX_IMAGE_TAG_DEFAULT=stable
@@ -10,14 +8,17 @@ PMX_API_TAGS="https://index.docker.io/v1/repositories/centurylink/panamax-api/ta
 SETUP_UPDATE_URL="http://download.panamax.io/installer/.versions"
 DOCUMENTATION_URL="https://github.com/CenturyLinkLabs/panamax-ui/wiki/Release-Notes"
 CWD="${HOME}/.panamax/"
+PMX_VAR="${HOME}/.panamax"
 ENV="$CWD".env_tmp
-ENV_COMMIT="$CWD".env
-IMAGES_VDI="$CWD"images.vdi
-IMAGES_ZIP="$CWD"images.tar.gz
+ENV_COMMIT="$PMX_VAR"/.env
+IMAGES_VDI="$PMX_VAR"/images.vdi
+IMAGES_ZIP="$PMX_VAR"/images.tar.gz
 IMAGES_CDN="http://download.panamax.io/images.tar.gz"
 PMX_VM_NAME="panamax-vm"
 PMX_VM_MEMORY_DEFAULT=1536
 PMX_VM_CPUS_DEFAULT=2
+PMX_VM_PRIVATE_IP="10.0.0.200"
+PMX_LOCAL_DOMAIN="panamax.local"
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
 echo_restart="restart:       Stops and Starts Panamax."
@@ -31,6 +32,7 @@ echo_uninstall="delete:        Uninstalls Panamax, deletes applications and Core
 echo_ssh="ssh:           SSH into Panamax CoreOS VM."
 echo_help="help:          Show this help"
 echo_debug="debug:         Display your current Panamax settings."
+
 
 function displayLogo {
     tput clear
@@ -230,16 +232,24 @@ function installPanamax {
         echo ""
         read -p "Enter memory (MB) to be allocated to Panamax VM($PMX_VM_MEMORY_DEFAULT):" panamaxRam
         read -p "Enter CPUs to be allocated to Panamax VM($PMX_VM_CPUS_DEFAULT):" panamaxCpus
-        read -p "Enter default UI port($PMX_PORT_UI):"  panamaxPortUi
-        read -p "Enter default API port($PMX_PORT_API):"  panamaxPortApi
         read -p "Enter version you want to use(dev/stable, defaults to:$PMX_IMAGE_TAG_DEFAULT)" panamaxVersion
+        if [[ "`grep ${PMX_LOCAL_DOMAIN}  /etc/hosts`" == "" ]]; then
+            read -p "Would you like Panamax to create the alias (${PMX_LOCAL_DOMAIN})? (You will be prompted for sudo creds) [y/N]:" localDomain
+        fi
         echo ""
+    fi
+
+    if [[ ("`grep ${PMX_LOCAL_DOMAIN}  /etc/hosts`" == "") && ("${localDomain}" == "y" || "${localDomain}" == "Y") ]]; then
+        echo "Setting local alias to ${PMX_LOCAL_DOMAIN}"
+        if [[ "${sudoPassword}" == "" ]]; then
+            sudo -S -- sh -c "echo \"${PMX_VM_PRIVATE_IP} ${PMX_LOCAL_DOMAIN}\" >> /etc/hosts"
+        else
+            echo ${sudoPassword} | sudo -S -- sh -c "echo \"${PMX_VM_PRIVATE_IP} ${PMX_LOCAL_DOMAIN}\" >> /etc/hosts"
+        fi
     fi
 
     panamaxRam=${panamaxRam:-$PMX_VM_MEMORY_DEFAULT}
     panamaxCpus=${panamaxCpus:-$PMX_VM_CPUS_DEFAULT}
-    panamaxPortUi=${panamaxPortUi:-$PMX_PORT_UI}
-    panamaxPortApi=${panamaxPortApi:-$PMX_PORT_API}
     redownload=${download:-N}
     PMX_IMAGE_TAG=${panamaxVersion:-${PMX_IMAGE_TAG:-$PMX_IMAGE_TAG_DEFAULT}}
 
@@ -251,18 +261,20 @@ function installPanamax {
     if [[ "$PMX_BASEBOX" != "" && "$PMX_BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
         vagrant box remove $PMX_BASEBOX
     fi
-    setEnvVar "PMX_PORT_UI" $panamaxPortUi
-    setEnvVar "PMX_PORT_API" $panamaxPortApi
+    echo "" > $ENV
+    if [[ "$PMX_PANAMAX_ID" == "" ]]; then
+        PMX_PANAMAX_ID="`uuidgen`"
+    fi
     setEnvVar "PMX_BASEBOX" \"$BASEBOX_DEFAULT\"
     setEnvVar "PMX_BASEBOX_URL" \"$BASEBOX_URL_DEFAULT\"
     setEnvVar "PMX_VM_MEMORY" $panamaxRam
     setEnvVar "PMX_VM_CPUS" $panamaxCpus
+    setEnvVar "PMX_VM_PRIVATE_IP" \"${PMX_VM_PRIVATE_IP}\"
     saveVersionInfo
     setEnvVar "PMX_OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
-    if [[ "$PMX_PANAMAX_ID" == "" ]]; then
-       setEnvVar "PMX_PANAMAX_ID" "\"`uuidgen`\""
-    fi
+    setEnvVar "PMX_PANAMAX_ID" \"${PMX_PANAMAX_ID}\"
+    setEnvVar "VAGRANT_DOTFILE_PATH" $PMX_VAR
     source "$ENV"
 
     if [[  $operation == "reinstall" ]]; then
@@ -291,11 +303,11 @@ function createPmxVM {
     echo ""
     echo "Creating a new CoreOS VM..."
     if [[ ! -f "$IMAGES_VDI" ]]; then
-        if [[ -f "$IMAGES_ZIP" ]]; then 
-            tar -zxf "$IMAGES_ZIP" -C "$CWD"
+        if [[ -f "$IMAGES_ZIP" ]]; then
+            tar -zxf "$IMAGES_ZIP" -C "$PMX_VAR"
             download_complete=$?
         fi
-        if [[ "$download_complete" != "0" || ! -f "$IMAGES_ZIP" ]]; then    
+        if [[ "$download_complete" != "0" || ! -f "$IMAGES_ZIP" ]]; then
             echo "Downloading images"
             download_complete="-1"
             until [ "$download_complete"  == "0" ];
@@ -304,9 +316,9 @@ function createPmxVM {
                 sleep 2
                 tar -tzf "$IMAGES_ZIP" >/dev/null
                 download_complete=$?
-            done    
+            done
         fi
-        tar -zxf "$IMAGES_ZIP" -C "$CWD"
+        tar -zxf "$IMAGES_ZIP" -C "$PMX_VAR"
     fi
     if [[ ! -f "$IMAGES_VDI" ]]; then
         echo "Error downloading images disk. Please try again later."
@@ -316,7 +328,6 @@ function createPmxVM {
     rm -f "$IMAGES_ZIP"
 }
 
-
 function setEnvVar {
     local envVarName=`echo "$1" | sed 's/[PMX_]+//g'`
     echo $"`sed  "/$envVarName=/d" "$ENV"`" > "$ENV"
@@ -325,15 +336,19 @@ function setEnvVar {
 
 function openPanamax {
     echo "waiting for panamax to start....."
-    until [ `curl -sL -w "%{http_code}" "http://localhost:$PMX_PORT_UI"  -o /dev/null` == "200" ];
+    local pmxUrl="http://${PMX_VM_PRIVATE_IP}:3000"
+    if [[ "`grep ${PMX_LOCAL_DOMAIN}  /etc/hosts`" != "" ]]; then
+        pmxUrl="http://${PMX_LOCAL_DOMAIN}:3000"
+    fi
+    until [ `curl -sL -w "%{http_code}" "${pmxUrl}"   -o /dev/null` == "200" ];
     do
       printf .
       sleep 2
     done
 
     echo ""
-    open "http://localhost:$PMX_PORT_UI" || { echo "Please go to http://localhost:$PMX_PORT_UI" to access panamax; }
-    echo "Please go to http://localhost:$PMX_PORT_UI to access panamax."
+    open "${pmxUrl}" || { echo "Please go to ${pmxUrl}" to access panamax; }
+    echo "Please go to ${pmxUrl} to access panamax."
     echo ""
     echo ""
 }
@@ -425,7 +440,7 @@ function debug {
 }
 
 function showShortHelp {
-    echo "./panamax {init|up|pause|restart|info|check|download|reinstall|delete|help} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [--memory=3072] [--cpu=2]"
+    echo "panamax {init|up|pause|restart|info|check|download|reinstall|delete|help} [-ppUi=<panamax UI port>] [-ppApi=<panamax API port>] [--dev|stable] [-Id=y|n] [-sp=<sudo password>] [--memory=1536] [--cpu=2]"
     echo ""
 }
 
@@ -488,14 +503,14 @@ function readParams {
         -op=*|--operation=*)
         operation="${i#*=}"
         ;;
-        -ppui=*|--panamaxportui=*)
-        panamaxPortUi="${i#*=}"
-        ;;
-        -ppapi=*|--panamaxportapi=*)
-        panamaxPortApi="${i#*=}"
-        ;;
         -vd=*|--vagrantdownload=*)
         download="${i#*=}"
+        ;;
+        -ld=*|--localdomain=*)
+        localDomain="${i#*=}"
+        ;;
+        -sp=*|--sudopassword=*)
+        sudoPassword="${i#*=}"
         ;;
         --help|-h|help)
         showLongHelp;
@@ -514,10 +529,15 @@ function main {
         cp "$ENV_COMMIT" "$ENV"
         source "$ENV"
     else
+        rm -f "$ENV"
         touch "$ENV"
     fi
+
+    if [[ ! -f "$PMX_VAR" ]]; then
+        mkdir -p "$PMX_VAR"
+    fi
+
     displayLogo
-    
     readParams "$@"
 
     if [[ $# -gt 0 ]]; then
