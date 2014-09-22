@@ -2,8 +2,8 @@ require "formula"
 
 class Panamax < Formula
   homepage "http://www.centurylinklabs.com"
-  url "http://download.panamax.io/installer/pmx-installer-0.2.0.zip"
-  sha1 "d629ebf2758911b8cce65eed7a8d8f5377a459a6"
+  url "http://download.panamax.io/installer/pmx-installer-0.2.1.zip"
+  sha1 "1fa459868d94325c307d4b9d912fdabd1f6d317f"
 
   def install
     cachedir = HOMEBREW_CACHE + "panamax-#{version}.zip"
