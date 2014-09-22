@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.2.1 - 2014-09-22
+-----------------
+### Added - (Desktop version only)
+- Entry to vagrant file to create Private IP for CoreOS VM via Host-Only adaptor.
+  - Panamax now runs on `http://10.0.0.200:3000`
+  - All applications that have a host port assigned, run via that IP. Example: `http://10.0.0.200:8080`
+- Option for Panamax to create alias, `panamax.local`, for private IP - requires Admin password
+  - Panamax and applications can be accessed using alias rather than IP. Example: `http://panamax.local:3000`
+
 0.2.0 - 2014-09-09
 -----------------
 ### Added
