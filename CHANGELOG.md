@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.2.3 - 2014-10-02
+-----------------
+### Added
+- Updated CoreOS version to 410.2.0 to further address Shellshock vulnerability
+
 0.2.2 - 2014-09-29
 -----------------
 ### Added 
