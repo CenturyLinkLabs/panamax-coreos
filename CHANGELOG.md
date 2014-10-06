@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.3.0 - 2014-10-07
+-----------------
+### Added
+- Updated cAdvisor to 0.4.1 ([Issue #54](https://github.com/CenturyLinkLabs/panamax-coreos/issues/54)) 
+
 0.2.3 - 2014-10-02
 -----------------
 ### Added
