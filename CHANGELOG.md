@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 -----------------
 ### Added
 - Updated cAdvisor to 0.4.1 ([Issue #54](https://github.com/CenturyLinkLabs/panamax-coreos/issues/54)) 
+- Updated brew setup script to use standard brew setup paths.
 
 0.2.3 - 2014-10-02
 -----------------

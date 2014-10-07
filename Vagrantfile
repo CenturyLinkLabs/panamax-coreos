@@ -1,6 +1,6 @@
 # -*- mode: ruby -*-
 # # vi: set ft=ruby :
-imagesDisk = 'images.vdi'
+imagesDisk = "#{ENV['PMX_VAR_DIR']}/images.vdi" || 'images.vdi'
 
 Vagrant.configure("2") do |config|
     Vagrant.require_version ">= 1.6.0"

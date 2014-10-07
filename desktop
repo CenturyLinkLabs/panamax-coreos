@@ -119,7 +119,7 @@ function checkForSetupUpdate {
         updateAvailableForSetup="0"
         if [[ -f "$ENV" ]]; then
             source "$ENV"
-            versionList=`curl -sL $SETUP_UPDATE_URL | grep zip`
+            versionList=`curl -sL $SETUP_UPDATE_URL | grep tar`
             local newVersionAvailable="`newerVersionAvailable $PMX_SETUP_VERSION \"$versionList\"`"
             if [[ "$newVersionAvailable" == "1" ]]; then
               echo "Local Panamax Installer version:"
@@ -219,6 +219,10 @@ function saveVersionInfo {
 
 function installPanamax {
     checkPreReqs
+    echo "" > $ENV
+    setEnvVar "VAGRANT_DOTFILE_PATH" "$PMX_VAR"
+    source $ENV
+
     if [[ "$operation" == "install"  && "`runVagrant status $PMX_VM_NAME --machine-readable | grep "MachineNotFound\|not created"`" == "" ]]; then
         echo "A different VM with name $PMX_VM_NAME has been created already. Please re-install or delete $PMX_VM_NAME VM and try again."
         exit 1;
@@ -261,7 +265,7 @@ function installPanamax {
     if [[ "$PMX_BASEBOX" != "" && "$PMX_BASEBOX" != "$BASEBOX_DEFAULT" ]]; then        
         vagrant box remove $PMX_BASEBOX
     fi
-    echo "" > $ENV
+
     if [[ "$PMX_PANAMAX_ID" == "" ]]; then
         PMX_PANAMAX_ID="`uuidgen`"
     fi
@@ -274,7 +278,7 @@ function installPanamax {
     setEnvVar "PMX_OPERATION" "$operation"
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
     setEnvVar "PMX_PANAMAX_ID" \"${PMX_PANAMAX_ID}\"
-    setEnvVar "VAGRANT_DOTFILE_PATH" $PMX_VAR
+    setEnvVar "PMX_VAR_DIR" "$PMX_VAR"
     source "$ENV"
 
     if [[  $operation == "reinstall" ]]; then
@@ -284,10 +288,14 @@ function installPanamax {
             read -p "Would you like to re-download coreos base box[y/N]: " redownload
         fi
         if [[ -f "$IMAGES_VDI" ]]; then
-            runVagrant halt
-            VBoxManage storageattach panamax-vm --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'
+            if [[ "`vboxmanage list runningvms | grep $PMX_VM_NAME`" != "" ]]; then
+                VBoxManage controlvm $PMX_VM_NAME poweroff
+            fi
+            VBoxManage storageattach $PMX_VM_NAME --storagectl "IDE Controller" --port 1 --device 0 --type hdd --medium 'none'  > /dev/null 2>&1
+            VBoxManage closemedium disk $IMAGES_VDI   > /dev/null 2>&1
+            VBoxManage internalcommands sethduuid $IMAGES_VDI
         fi
-        runVagrant destroy -f || { echo "VM Destroy failed. Exiting."; exit 1; }
+        VBoxManage unregistervm $PMX_VM_NAME --delete
         if [[ $redownload == "Y" || $redownload == "y" ]]; then
             vagrant box remove $PMX_BASEBOX
             vagrant box add $PMX_BASEBOX $PMX_BASEBOX_URL
@@ -300,10 +308,11 @@ function installPanamax {
 }
 
 function createPmxVM {
+
     echo ""
     echo "Creating a new CoreOS VM..."
     if [[ ! -f "$IMAGES_VDI" ]]; then
-        if [[ -f "$IMAGES_ZIP" ]]; then
+        if [[ -f "$IMAGES_ZIP" ]]; then 
             tar -zxf "$IMAGES_ZIP" -C "$PMX_VAR"
             download_complete=$?
         fi
@@ -323,6 +332,8 @@ function createPmxVM {
     if [[ ! -f "$IMAGES_VDI" ]]; then
         echo "Error downloading images disk. Please try again later."
         exit 1;
+    else
+        VBoxManage internalcommands sethduuid $IMAGES_VDI
     fi
     runVagrant up --provider virtualbox || { echo "VM Creation failed. Exiting."; exit 1; }
     rm -f "$IMAGES_ZIP"

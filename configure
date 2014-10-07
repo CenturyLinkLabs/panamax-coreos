@@ -1,0 +1,20 @@
+#!/bin/sh
+
+for i in "$@"
+do
+case $i in
+    --prefix=*)
+        prefix="${i#*=}"
+        ;;
+    --var=*)
+        var="${i#*=}"
+        ;;
+esac
+done
+
+sed -i ""  "s#\${HOME}#${prefix}#g" panamax
+sed -i ""  "s#\${HOME}#${prefix}#g" desktop
+sed -i ""  "s#ROOT_DIR=\"\${HOME}\"#ROOT_DIR=\"${prefix}\"#g" Makefile
+sed -i ""  "s#PMX_VAR=.*#PMX_VAR=\"${var}\"#g" Makefile
+sed -i ""  "s#PMX_VAR=.*#PMX_VAR=\"${var}\"#g" desktop
+
