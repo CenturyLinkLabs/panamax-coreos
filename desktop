@@ -181,6 +181,11 @@ function checkForPanamaxUpdate {
    fi
 }
 
+function getPanamaxSetupVersion {
+    echo "\"$(<"$CWD.version")\""
+    exit 0;
+}
+
 function checkForUpdate {
     if [[ "$1" == "e" || "$1" == "u" ]]; then
         checkPreReqs
@@ -527,6 +532,9 @@ function readParams {
         showLongHelp;
         exit 1;
         ;;
+        -sv)
+        getPanamaxSetupVersion;
+        ;;
         *)
         showLongHelp;
         exit 1;
@@ -548,7 +556,9 @@ function main {
         mkdir -p "$PMX_VAR"
     fi
 
-    displayLogo
+    if [[ "$1" != "-sv" ]]; then
+        displayLogo
+    fi
     readParams "$@"
 
     if [[ $# -gt 0 ]]; then
