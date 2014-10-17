@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.3.2 - 2014-10-17
+-----------------
+### Added
+- Updated CoreOS to latest stable release (444.5.0).
+- Updated panamax configuration to run cadvisor on static port 3002.
+
 0.3.1 - 2014-10-13
 -----------------
 ### Added
