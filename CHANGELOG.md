@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 -----------------
 ### Added
 - Updated CoreOS to latest stable release (494.5.0).
+- Updated cAdvisor 0.6.2
 
 0.3.3 - 2014-12-05
 -----------------
