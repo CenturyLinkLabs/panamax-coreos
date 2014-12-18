@@ -19,6 +19,7 @@ PMX_VM_MEMORY_DEFAULT=1536
 PMX_VM_CPUS_DEFAULT=2
 PMX_VM_PRIVATE_IP="10.0.0.200"
 PMX_LOCAL_DOMAIN="panamax.local"
+PMX_INSCURE_REGISTRY="y"
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
 echo_restart="restart:       Stops and Starts Panamax."
@@ -245,6 +246,7 @@ function installPanamax {
         if [[ "`grep ${PMX_LOCAL_DOMAIN}  /etc/hosts`" == "" ]]; then
             read -p "Would you like Panamax to create the alias (${PMX_LOCAL_DOMAIN})? (You will be prompted for sudo creds) [y/N]:" localDomain
         fi
+        read -p "Do you want to let Docker daemon allow connections to insecure registries [Y/n]: " pmxInsecureRegistry
         echo ""
     fi
 
@@ -260,6 +262,8 @@ function installPanamax {
     panamaxRam=${panamaxRam:-$PMX_VM_MEMORY_DEFAULT}
     panamaxCpus=${panamaxCpus:-$PMX_VM_CPUS_DEFAULT}
     redownload=${download:-N}
+    pmxInsecureRegistry=${pmxInsecureRegistry:-$PMX_INSECURE_REGISTRY}
+
     PMX_IMAGE_TAG=${panamaxVersion:-${PMX_IMAGE_TAG:-$PMX_IMAGE_TAG_DEFAULT}}
 
     if [ ! -d "$CWD" ]; then
@@ -284,6 +288,7 @@ function installPanamax {
     setEnvVar "PMX_VM_NAME" "$PMX_VM_NAME"
     setEnvVar "PMX_PANAMAX_ID" \"${PMX_PANAMAX_ID}\"
     setEnvVar "PMX_VAR_DIR" "$PMX_VAR"
+    setEnvVar "PMX_INSECURE_REGISTRY" "$pmxInsecureRegistry"
     source "$ENV"
 
     if [[  $operation == "reinstall" ]]; then
@@ -305,11 +310,33 @@ function installPanamax {
             vagrant box remove $PMX_BASEBOX
             vagrant box add $PMX_BASEBOX $PMX_BASEBOX_URL
         fi
+        updateCloudConfig
         createPmxVM
     else
+        updateCloudConfig
         createPmxVM
     fi
     openPanamax;
+}
+
+function updateCloudConfig {
+
+    if [[ "`echo $PMX_INSECURE_REGISTRY | tr '[:upper:]' '[:lower:]'`" == "y" ]]; then
+        echo "#cloud-config
+
+        write_files:
+        - path: /etc/systemd/system/docker.service.d/50-insecure-registry.conf
+          content: |
+            [Service]
+                Environment=DOCKER_OPTS='--insecure-registry=\"0.0.0.0/14\"'" > $PMX_VAR/user-data
+    else
+        echo "#cloud-config
+              " > $PMX_VAR/user-data
+    fi
+
+    if [[ -f "cloud_config_usr.yaml" ]]; then
+        cat $CWD/cloud_config_usr.yaml >> $PMX_VAR/user-data
+    fi
 }
 
 function createPmxVM {
@@ -385,6 +412,7 @@ function restartPanamax {
     setEnvVar "PMX_OPERATION" "$operation"
     source "$ENV"
     savePortForwardingRules
+    updateCloudConfig
     runVagrant reload --provision || {  echo >&2 "Restarting Panamax seems to have failed. Please try again using the reinstall option."; exit 1; }
     recreatePortForwardingRules
     echo $?
@@ -472,73 +500,53 @@ function readParams {
     do
     case `echo $i | tr '[:upper:]' '[:lower:]'` in
         --dev)
-        PMX_IMAGE_TAG=dev
-        ;;
+        PMX_IMAGE_TAG=dev;;
         --stable)
-        PMX_IMAGE_TAG=stable
-        ;;
+        PMX_IMAGE_TAG=stable;;
         --memory=*)
-        panamaxRam="${i#*=}"
-        ;;
+        panamaxRam="${i#*=}";;
         --cpu=*)
-        panamaxCpus="${i#*=}"
-        ;;
+        panamaxCpus="${i#*=}";;
         install|init)
-        operation=install
-        ;;
+        operation=install;;
         uninstall|delete)
-        operation=uninstall
-        ;;
+        operation=uninstall;;
         stop|pause)
-        operation=stop
-        ;;
+        operation=stop;;
         start|up)
-        operation=start
-        ;;
+        operation=start;;
         restart)
-        operation=restart
-        ;;
+        operation=restart;;
         update|download)
-        operation=update
-        ;;
+        operation=update;;
         check)
-        operation=check
-        ;;
+        operation=check;;
         info|--version|-v)
-        operation=info
-        ;;
+        operation=info;;
         reinstall)
-        operation=reinstall
-        ;;
+        operation=reinstall;;
         ssh)
-        operation=ssh
-        ;;
+        operation=ssh;;
         debug)
-        operation=debug
-        ;;
+        operation=debug;;
         -op=*|--operation=*)
-        operation="${i#*=}"
-        ;;
+        operation="${i#*=}";;
         -vd=*|--vagrantdownload=*)
-        download="${i#*=}"
-        ;;
+        download="${i#*=}";;
         -ld=*|--localdomain=*)
-        localDomain="${i#*=}"
-        ;;
+        localDomain="${i#*=}";;
         -sp=*|--sudopassword=*)
-        sudoPassword="${i#*=}"
-        ;;
+        sudoPassword="${i#*=}";;
         --help|-h|help)
         showLongHelp;
-        exit 1;
-        ;;
+        exit 1;;
         -sv)
-        getPanamaxSetupVersion;
-        ;;
+        getPanamaxSetupVersion;;
+        --insecure-registry)
+        pmxInsecureRegistry="y";;
         *)
         showLongHelp;
-        exit 1;
-        ;;
+        exit 1;;
     esac
     done
 }

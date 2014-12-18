@@ -30,6 +30,8 @@ Vagrant.configure("2") do |config|
     if ARGV[0] == "up" then
       config.vm.provision "shell", inline: "cd /var/panamax && ./create-docker-mount", keep_color: "true"
     end
+
+    config.vm.provision "shell", inline: "sudo mv /var/panamax/user-data /var/lib/coreos-vagrant/vagrantfile-user-data"
     config.vm.provision "shell", inline: "sudo chmod +x /var/panamax/coreos", keep_color: "true"
     config.vm.provision "shell", inline: "cd /var/panamax && ./coreos $1 --$2 -pid=\"$3\"", args: "#{ENV['PMX_OPERATION'] || 'install'} #{ENV['PMX_IMAGE_TAG'] || 'stable'} #{ENV['PMX_PANAMAX_ID'] || 'not-set'}", keep_color: "true"
     config.vm.synced_folder ".", "/vagrant", disabled: true
