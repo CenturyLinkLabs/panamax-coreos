@@ -328,7 +328,7 @@ function updateCloudConfig {
         - path: /etc/systemd/system/docker.service.d/50-insecure-registry.conf
           content: |
             [Service]
-                Environment=DOCKER_OPTS='--insecure-registry=\"0.0.0.0/14\"'" > $PMX_VAR/user-data
+                Environment=DOCKER_OPTS='--insecure-registry=\"0.0.0.0/24\"'" > $PMX_VAR/user-data
     else
         echo "#cloud-config
               " > $PMX_VAR/user-data
