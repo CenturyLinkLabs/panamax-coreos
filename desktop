@@ -328,10 +328,15 @@ function updateCloudConfig {
         - path: /etc/systemd/system/docker.service.d/50-insecure-registry.conf
           content: |
             [Service]
-                Environment=DOCKER_OPTS='--insecure-registry=\"0.0.0.0/24\"'" > $CWD/user-data
+            Environment=DOCKER_OPTS='--insecure-registry=\"0.0.0.0/0\"'" > $CWD/user-data
     else
         echo "#cloud-config
-              " > $CWD/user-data
+
+        write_files:
+        - path: /etc/systemd/system/docker.service.d/50-insecure-registry.conf
+          content: |
+            [Service]
+            Environment=DOCKER_OPTS='--insecure-registry=\"10.10.10.254/24'" > $CWD/user-data
     fi
 
     if [[ -f "$PMX_VAR/cloud_config_usr.yaml" ]]; then
