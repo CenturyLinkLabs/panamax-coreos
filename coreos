@@ -3,11 +3,10 @@
 CWD=`pwd`
 ENV="$CWD/.coreosenv"
 source $ENV
+UNITS_DIR=/etc/systemd/system
 
 function operatePanamax {
- sudo systemctl $1 panamax-metrics.service
- sudo systemctl $1 panamax-api.service
- sudo systemctl $1 panamax-ui.service
+ cd $UNITS_DIR && sudo systemctl $1 panamax-*.service
 }
 
 function cleanupCoreOS {
@@ -38,41 +37,26 @@ function uninstallPanamax {
     if [[ "$CLEANUP_MODE" == "all" ]]; then
         cleanupCoreOS
     fi
+}
 
+function downloadImage {
+    echo ""
+    echo "docker pull $1"
+    /usr/bin/docker pull $1 >/dev/null &
+    PID=$!
+    while $(kill -n 0 $PID 2> /dev/null)
+    do
+      echo -n '.'
+      sleep 2
+    done
 }
 
 function downloadPmxImages {
-    echo ""
     echo "docker pull $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG "
-    /usr/bin/docker pull $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG >/dev/null &
-    PID=$!
-    while $(kill -n 0 $PID 2> /dev/null)
-    do
-      echo -n '.'
-      sleep 2
-    done
-
-    echo ""
     echo "docker pull $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
-    /usr/bin/docker pull $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG >/dev/null &
-    PID=$!
-    while $(kill -n 0 $PID 2> /dev/null)
-    do
-      echo -n '.'
-      sleep 2
-    done
-    echo ""
-
-    echo ""
     echo "docker pull $CADVISOR_IMAGE"
-    /usr/bin/docker pull $CADVISOR_IMAGE >/dev/null &
-    PID=$!
-    while $(kill -n 0 $PID 2> /dev/null)
-    do
-      echo -n '.'
-      sleep 2
-    done
-    echo ""
+    echo "docker pull $DRAY_REDIS_IMAGE"
+    echo "docker pull $DRAY_IMAGE"
 }
 
 function installPanamax {
@@ -86,7 +70,7 @@ function installPanamax {
     sudo mkdir -p units
     sudo rm -f units/*
     writeUnitFiles
-    sudo cp units/* /etc/systemd/system/
+    sudo cp units/* $UNITS_DIR
     sudo cp -f scripts/* /etc/systemd/user 2>/dev/null
     downloadPmxImages
     operatePanamax enable
@@ -136,6 +120,30 @@ function writeUnitFiles {
 
         [Install]
         WantedBy=multi-user.target" > units/panamax-metrics.service
+
+  echo "[Unit]
+        Description=Panamax Redis
+
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
+        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE /usr/local/bin/redis-server
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY_REDIS
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-redis.service
+
+  echo "[Unit]
+        Description=Panamax Dray
+
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY
+        ExecStart=/usr/bin/docker  run --link $CONTAINER_NAME_DRAY_REDIS:redis --volume=/var/run/docker.sock:/var/run/docker.sock:rw --publish=3003:3000 --name=$CONTAINER_NAME_DRAY  $DRAY_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-dray.service
 }
 
 function getRunCmdAPI {
@@ -148,7 +156,7 @@ function getRunCmdAPI {
     if [[ "$docker_ip" != "" ]]; then
         COREOS_ENDPOINT="http://$docker_ip"
     fi
-    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw -e PANAMAX_ID="$PANAMAX_ID" -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -t  -p 3001:3000 " $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw  --link $CONTAINER_NAME_DRAY:DRAY   -e PANAMAX_ID="$PANAMAX_ID" -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -t  -p 3001:3000 " $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG
 }
 
 function getRunCmdUI {
