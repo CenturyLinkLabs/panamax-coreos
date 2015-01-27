@@ -83,7 +83,7 @@ function installPanamax {
 function writeUnitFiles {
  echo "[Unit]
       Description=Panamax API
-      After=docker.service
+      After=docker.service panamax-dray.service
       Requires=docker.service
 
       [Service]
@@ -123,6 +123,7 @@ function writeUnitFiles {
 
   echo "[Unit]
         Description=Panamax Redis
+        Before=panamax-dray.service
 
         [Service]
         ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
@@ -135,6 +136,7 @@ function writeUnitFiles {
 
   echo "[Unit]
         Description=Panamax Dray
+        Before=panamax-api.service
 
         [Service]
         ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY
