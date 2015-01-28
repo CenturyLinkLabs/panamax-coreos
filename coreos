@@ -52,11 +52,11 @@ function downloadImage {
 }
 
 function downloadPmxImages {
-    echo "docker pull $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG "
-    echo "docker pull $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
-    echo "docker pull $CADVISOR_IMAGE"
-    echo "docker pull $DRAY_REDIS_IMAGE"
-    echo "docker pull $DRAY_IMAGE"
+    downloadImage $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG
+    downloadImage $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG
+    downloadImage $CADVISOR_IMAGE
+    downloadImage $DRAY_REDIS_IMAGE
+    downloadImage $DRAY_IMAGE
 }
 
 function installPanamax {
@@ -127,7 +127,7 @@ function writeUnitFiles {
 
         [Service]
         ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
-        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE /usr/local/bin/redis-server
+        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE
         ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY_REDIS
         Restart=always
 
