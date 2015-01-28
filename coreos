@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 CWD=`pwd`
 ENV="$CWD/.coreosenv"
 source $ENV
@@ -85,10 +86,53 @@ function installPanamax {
 
 
 function writeUnitFiles {
+
+echo "[Unit]
+        Description=Panamax Redis
+        Before=panamax-dray.service
+
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
+        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY_REDIS
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-dray-redis.service
+
+
+echo "[Unit]
+        Description=Panamax Metrics
+        Before=panamax-ui.service
+
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
+        ExecStart=/usr/bin/docker  run --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro   --volume=/var/lib/docker/:/var/lib/docker:ro  --publish=3002:8080 --name=$CONTAINER_NAME_CADVISOR  $CADVISOR_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-metrics.service
+
+echo "[Unit]
+        Description=Panamax Dray
+        Before=panamax-api.service
+        After=panamax-dray-redis.service
+        Requires=panamax-dray-redis.service
+
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY
+        ExecStart=/usr/bin/docker  run --link $CONTAINER_NAME_DRAY_REDIS:redis --volume=/var/run/docker.sock:/var/run/docker.sock:rw --publish=3003:3000 --name=$CONTAINER_NAME_DRAY  $DRAY_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-dray.service
+
  echo "[Unit]
       Description=Panamax API
       After=docker.service panamax-dray.service
-      Requires=docker.service
+      Requires=docker.service panamax-dray.service
 
       [Service]
       ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_API
@@ -113,43 +157,9 @@ function writeUnitFiles {
       [Install]
       WantedBy=multi-user.target" > units/panamax-ui.service
 
-  echo "[Unit]
-        Description=Panamax Metrics
 
-        [Service]
-        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
-        ExecStart=/usr/bin/docker  run --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro   --volume=/var/lib/docker/:/var/lib/docker:ro  --publish=3002:8080 --name=$CONTAINER_NAME_CADVISOR  $CADVISOR_IMAGE
-        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
-        Restart=always
 
-        [Install]
-        WantedBy=multi-user.target" > units/panamax-metrics.service
 
-  echo "[Unit]
-        Description=Panamax Redis
-        Before=panamax-dray.service
-
-        [Service]
-        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
-        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE
-        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY_REDIS
-        Restart=always
-
-        [Install]
-        WantedBy=multi-user.target" > units/panamax-redis.service
-
-  echo "[Unit]
-        Description=Panamax Dray
-        Before=panamax-api.service
-
-        [Service]
-        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY
-        ExecStart=/usr/bin/docker  run --link $CONTAINER_NAME_DRAY_REDIS:redis --volume=/var/run/docker.sock:/var/run/docker.sock:rw --publish=3003:3000 --name=$CONTAINER_NAME_DRAY  $DRAY_IMAGE
-        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY
-        Restart=always
-
-        [Install]
-        WantedBy=multi-user.target" > units/panamax-dray.service
 }
 
 function getRunCmdAPI {
