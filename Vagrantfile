@@ -4,8 +4,8 @@ imagesDisk = "#{ENV['PMX_VAR_DIR']}/images.vdi" || 'images.vdi'
 
 Vagrant.configure("2") do |config|
     Vagrant.require_version ">= 1.6.0"
-    config.vm.box = ENV['PMX_BASEBOX'] || "panamax-coreos-box-522.5.0"
-    config.vm.box_url = ENV['PMX_BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/522.5.0/coreos_production_vagrant.box"
+    config.vm.box = ENV['PMX_BASEBOX'] || "panamax-coreos-box-522.6.0"
+    config.vm.box_url = ENV['PMX_BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/522.6.0/coreos_production_vagrant.box"
     config.vm.hostname = ENV['PMX_VM_NAME'] || "panamax-vm"
 
     config.vm.network "private_network", ip: ENV['PMX_VM_PRIVATE_IP'] || "10.0.0.200"

@@ -6,7 +6,11 @@ source $ENV
 UNITS_DIR=/etc/systemd/system
 
 function operatePanamax {
- cd $UNITS_DIR && sudo systemctl $1 panamax-*.service
+ cd $UNITS_DIR && sudo systemctl $1 panamax-redis.service
+ cd $UNITS_DIR && sudo systemctl $1 panamax-dray.service
+ cd $UNITS_DIR && sudo systemctl $1 panamax-metrics.service
+ cd $UNITS_DIR && sudo systemctl $1 panamax-api.service
+ cd $UNITS_DIR && sudo systemctl $1 panamax-ui.service
 }
 
 function cleanupCoreOS {
