@@ -4,7 +4,13 @@ CWD=`pwd`
 ENV="$CWD/.coreosenv"
 source $ENV
 
+function operateDray {
+ sudo systemctl $1 panamax-redis.service
+ sudo systemctl $1 panamax-dray.service
+}
+
 function operatePanamax {
+ operateDray $1
  sudo systemctl $1 panamax-metrics.service
  sudo systemctl $1 panamax-api.service
  sudo systemctl $1 panamax-ui.service
@@ -41,39 +47,26 @@ function uninstallPanamax {
 
 }
 
-function downloadPmxImages {
+function downloadImage {
     echo ""
-    echo "docker pull $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG "
-    /usr/bin/docker pull $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG >/dev/null &
+    echo "docker pull $1"
+    /usr/bin/docker pull $1 >/dev/null &
     PID=$!
     while $(kill -n 0 $PID 2> /dev/null)
     do
       echo -n '.'
       sleep 2
     done
-
-    echo ""
-    echo "docker pull $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
-    /usr/bin/docker pull $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG >/dev/null &
-    PID=$!
-    while $(kill -n 0 $PID 2> /dev/null)
-    do
-      echo -n '.'
-      sleep 2
-    done
-    echo ""
-
-    echo ""
-    echo "docker pull $CADVISOR_IMAGE"
-    /usr/bin/docker pull $CADVISOR_IMAGE >/dev/null &
-    PID=$!
-    while $(kill -n 0 $PID 2> /dev/null)
-    do
-      echo -n '.'
-      sleep 2
-    done
-    echo ""
 }
+
+function downloadPmxImages {
+    downloadImage $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG
+    downloadImage $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG
+    downloadImage $CADVISOR_IMAGE
+    downloadImage $DRAY_REDIS_IMAGE
+    downloadImage $DRAY_IMAGE
+}
+
 
 function installPanamax {
     echo "Installing Panamax..."
@@ -136,6 +129,32 @@ function writeUnitFiles {
 
         [Install]
         WantedBy=multi-user.target" > units/panamax-metrics.service
+
+ echo "[Unit]
+        Description=Panamax Redis
+        Before=panamax-dray.service
+        After=docker.service
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
+        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY_REDIS
+        Restart=always
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-redis.service
+
+echo "[Unit]
+        Description=Panamax Dray
+        Before=panamax-api.service
+        After=docker.service panamax-redis.service
+        Requires=panamax-redis.service
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY
+        ExecStart=/usr/bin/docker  run --link $CONTAINER_NAME_DRAY_REDIS:REDIS --volume=/var/run/docker.sock:/var/run/docker.sock:rw --publish=3003:3000 --name=$CONTAINER_NAME_DRAY  $DRAY_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY
+        Restart=always
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-dray.service
+
 }
 
 function getRunCmdAPI {

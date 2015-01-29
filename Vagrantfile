@@ -4,8 +4,8 @@ imagesDisk = "#{ENV['PMX_VAR_DIR']}/images.vdi" || 'images.vdi'
 
 Vagrant.configure("2") do |config|
     Vagrant.require_version ">= 1.6.0"
-    config.vm.box = ENV['PMX_BASEBOX'] || "panamax-coreos-box"
-    config.vm.box_url = ENV['PMX_BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/367.1.0/coreos_production_vagrant.box"
+    config.vm.box = ENV['PMX_BASEBOX'] || "panamax-coreos-box-522.6.0"
+    config.vm.box_url = ENV['PMX_BASEBOX_URL'] || "http://storage.core-os.net/coreos/amd64-usr/522.6.0/coreos_production_vagrant.box"
     config.vm.hostname = ENV['PMX_VM_NAME'] || "panamax-vm"
 
     config.vm.network "private_network", ip: ENV['PMX_VM_PRIVATE_IP'] || "10.0.0.200"
@@ -34,4 +34,6 @@ Vagrant.configure("2") do |config|
     config.vm.provision "shell", inline: "cd /var/panamax && ./coreos $1 --$2 -pid=\"$3\"", args: "#{ENV['PMX_OPERATION'] || 'install'} #{ENV['PMX_IMAGE_TAG'] || 'stable'} #{ENV['PMX_PANAMAX_ID'] || 'not-set'}", keep_color: "true"
     config.vm.synced_folder ".", "/vagrant", disabled: true
     config.ssh.username = "core"
+    # always use Vagrants insecure key
+    config.ssh.insert_key = false
 end
