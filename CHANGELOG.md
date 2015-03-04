@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.3.6 - 2015-02-04
+-----------------
+### Added
+- Added environment variables for API and Dray linkage
+
+0.3.5 - 2015-01-29
+-----------------
+### Added
+- Updated CoreOS to latest stable release (522.6.0).
+- Added additional images/containers for future features
+
+### Fixed
+- [Issue 494](https://github.com/CenturyLinkLabs/panamax-ui/issues/494) by adding `config.ssh.insert_key = false` to Vagrantfile
+
 0.3.4 - 2014-12-17
 -----------------
 ### Added

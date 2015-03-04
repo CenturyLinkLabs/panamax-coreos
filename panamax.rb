@@ -3,8 +3,8 @@ require "formula"
 
 class Panamax < Formula
   homepage "http://www.panamax.io"
-  url "http://download.panamax.io/installer/panamax-0.3.4.tar.gz"
-  sha1 "387b89dd3f1c8f8040ac2d6d5ffaf58664312c63"
+  url "http://download.panamax.io/installer/panamax-0.3.6.tar.gz"
+  sha1 "6a3e6b3557a4c258ba564c702a168f8e3a7699a8"
   def install
     system "./configure", "--prefix=#{prefix}", "--var=#{var}/panamax"
     system "make", "install"
