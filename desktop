@@ -19,7 +19,7 @@ PMX_VM_MEMORY_DEFAULT=1536
 PMX_VM_CPUS_DEFAULT=2
 PMX_VM_PRIVATE_IP="10.0.0.200"
 PMX_LOCAL_DOMAIN="panamax.local"
-PMX_INSECURE_REGISTRY="y"
+PMX_INSECURE_REGISTRY="n"
 
 echo_install="init:          First time installing Panamax! - Downloads CoreOS VM and installs latest Panamax version."
 echo_restart="restart:       Stops and Starts Panamax."
@@ -246,7 +246,7 @@ function installPanamax {
         if [[ "`grep ${PMX_LOCAL_DOMAIN}  /etc/hosts`" == "" ]]; then
             read -p "Would you like Panamax to create the alias (${PMX_LOCAL_DOMAIN})? (You will be prompted for sudo creds) [y/N]:" localDomain
         fi
-        read -p "Do you want to let Docker daemon allow connections to insecure registries [Y/n]: " pmxInsecureRegistry
+        read -p "Do you want to let Docker daemon allow connections to insecure registries [y/N]: " pmxInsecureRegistry
         echo ""
     fi
 
