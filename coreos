@@ -181,6 +181,8 @@ function startCoreOSServices {
    sudo systemctl mask update-engine.service
    sudo systemctl enable etcd fleet systemd-journal-gatewayd.socket
    sudo systemctl restart etcd fleet systemd-journal-gatewayd.socket
+   sudo systemctl stop ntpd.service
+   sudo systemctl start ntpd.service
 }
 
 function restartPanamax {
