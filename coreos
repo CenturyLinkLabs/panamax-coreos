@@ -92,8 +92,8 @@ function installPanamax {
 function writeUnitFiles {
  echo "[Unit]
       Description=Panamax API
-      After=docker.service
-      Requires=docker.service
+      After=docker.service fleet.service fleet.socket
+      Requires=docker.service fleet.service fleet.socket
 
       [Service]
       ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_API
@@ -167,11 +167,11 @@ function getRunCmdAPI {
     if [[ "$docker_ip" != "" ]]; then
         COREOS_ENDPOINT="http://$docker_ip"
     fi
-    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw -e DRAY_PORT=$COREOS_ENDPOINT:3003 -e PANAMAX_ID="$PANAMAX_ID" -e INSECURE_REGISTRY=$INSECURE_REGISTRY -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531 -e FLEETCTL_ENDPOINT=$COREOS_ENDPOINT:4001 -t  -p 3001:3000 " $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw -v /var/run/fleet.sock:/var/run/fleet.sock -e DRAY_PORT=$COREOS_ENDPOINT:3003 -e PANAMAX_ID=$PANAMAX_ID -e INSECURE_REGISTRY=$INSECURE_REGISTRY -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531  -t  -p 3001:3000  $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG"
 }
 
 function getRunCmdUI {
-    echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw --link $CONTAINER_NAME_API:PMX_API --link $CONTAINER_NAME_CADVISOR:CADVISOR -e INSECURE_REGISTRY=$INSECURE_REGISTRY -p 3000:3000 " $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -m=1g -c=10 -v /var/run/docker.sock:/run/docker.sock:rw --link $CONTAINER_NAME_API:PMX_API --link $CONTAINER_NAME_CADVISOR:CADVISOR -e INSECURE_REGISTRY=$INSECURE_REGISTRY -p 3000:3000  $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
 }
 
 function startCoreOSServices {
@@ -180,9 +180,12 @@ function startCoreOSServices {
    sudo systemctl stop update-engine.service
    sudo systemctl mask update-engine.service
    sudo systemctl enable etcd fleet systemd-journal-gatewayd.socket
-   sudo systemctl restart etcd fleet systemd-journal-gatewayd.socket
+   sudo systemctl restart etcd systemd-journal-gatewayd.socket
    sudo systemctl stop ntpd.service
    sudo systemctl start ntpd.service
+   sudo systemctl stop fleet.service;
+   sudo systemctl restart fleet.socket;
+   sudo systemctl start fleet.service
 }
 
 function restartPanamax {
