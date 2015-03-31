@@ -1,7 +1,5 @@
 #!/bin/bash
 
-exit 0;
-
 CWD=`pwd`
 ENV="$CWD/.coreosenv"
 source $ENV
