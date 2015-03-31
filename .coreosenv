@@ -11,6 +11,6 @@ IMAGE_TAG=latest
 CLEANUP_MODE=partial
 PERSIST_DB=true
 CADVISOR_IMAGE=google/cadvisor:0.6.2
-DRAY_REDIS_IMAGE=redis:2.8.19
+DRAY_REDIS_IMAGE=centurylink/redis:latest
 DRAY_IMAGE=centurylink/dray:latest
 INSECURE_REGISTRY=n
