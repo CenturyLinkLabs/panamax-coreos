@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.6.0 - 2015-04-28
+-----------------
+###Added
+- Bundling panamax remote cli (pmxcli) with panamax brew  and  ubuntu installers. 
+
 0.5.2 - 2015-04-15
 -----------------
 ###Added
