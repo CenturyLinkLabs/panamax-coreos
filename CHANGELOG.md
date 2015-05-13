@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.6.2 - 2015-05-13
+-----------------
+###Added
+- Updated CoreOS to latest stable release (647.0.0)
+
 0.6.0 - 2015-04-28
 -----------------
 ###Added
