@@ -1,0 +1,356 @@
+#!/bin/bash
+
+#TODO Check for ubuntu 15.04
+#TODO Check for admin rights
+
+CWD=`pwd`
+ENV="$CWD/.coreosenv"
+source $ENV
+
+function operateDray {
+ sudo systemctl $1 panamax-redis.service
+ sudo systemctl $1 panamax-dray.service
+}
+
+function operatePanamax {
+ operateDray $1
+ #sudo systemctl $1 panamax-metrics.service
+ sudo systemctl $1 panamax-api.service
+ sudo systemctl $1 panamax-ui.service
+}
+
+#function cleanupCoreOS {
+#    if [[ "fleetctl list-units | grep service "  != "" ]]; then
+#        echo Destroying all fleet units
+#        units=( `fleetctl list-units | grep service | gawk '{print $1 }'` )
+#        for i in "${units[@]}"
+#        do
+#            fleetctl destroy $i
+#        done
+#        #fleetctl destroy  `fleetctl list-units | grep service | gawk '{print $1 }'`
+#    fi
+#    if [[ "`docker ps -a | grep ago`" != "" ]]; then
+#        echo Destroying remaining docker containers
+#        docker stop `docker ps -a -q` && \
+#        docker rm `docker ps -a -q`
+#    fi
+#}
+
+function uninstallPanamax {
+    echo "Uninstalling Panamax."
+    operatePanamax stop
+    operatePanamax disable
+    sudo rm -f /etc/systemd/system/panamax*.service
+    #sudo rm -f /etc/systemd/user/*
+    sudo rm -f units/panamax*.service
+    if [[ "$CLEANUP_MODE" == "all" ]]; then
+        cleanupCoreOS
+    fi
+
+}
+
+function downloadImage {
+    echo ""
+    echo "docker pull $1"
+    docker pull $1 >/dev/null &
+    PID=$!
+    while $(kill -n 0 $PID 2> /dev/null)
+    do
+      echo -n '.'
+      sleep 2
+    done
+}
+
+function downloadPmxImages {
+    downloadImage $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG
+    downloadImage $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG
+    downloadImage $CADVISOR_IMAGE
+    downloadImage $DRAY_REDIS_IMAGE
+    downloadImage $DRAY_IMAGE
+}
+
+function installPanamax {
+    echo "Installing Panamax..."
+
+    apt-get -y install wget curl
+    wget -qO- https://get.docker.com/ | sh
+   cd /tmp && curl -L https://github.com/coreos/etcd/releases/download/v0.4.6/etcd-v0.4.6-linux-amd64.tar.gz | tar xz &&  \
+           mv  etcd*/etcd /usr/bin && \
+           chmod +x /usr/bin/etcd
+   cd /tmp &&  curl -L https://github.com/coreos/fleet/releases/download/v0.9.2/fleet-v0.9.2-linux-amd64.tar.gz | tar xz && \
+           mv  fleet*/fleetd /usr/bin && \
+           chmod +x /usr/bin/fleetd
+
+    if [[ -z "$PANAMAX_ID" ]]; then
+      PANAMAX_ID=`uuidgen`
+      echo "" >> $ENV
+      echo "PANAMAX_ID=\"$PANAMAX_ID\"" >> $ENV
+    fi
+
+    sudo mkdir -p units
+    sudo rm -f units/*
+    writeUnitFiles
+    sudo cp units/* /lib/systemd/system/
+    downloadPmxImages
+    operatePanamax enable
+    operatePanamax start
+    waitUntilStarted
+    echo "Panamax install complete"
+}
+
+
+function writeUnitFiles {
+
+ echo "[Unit]
+      Description=etcd
+
+      [Service]
+      User=root
+      PermissionsStartOnly=true
+      Environment=ETCD_DATA_DIR=/var/lib/etcd
+      Environment=ETCD_NAME=%m
+      ExecStart=/usr/bin/etcd
+      Restart=always
+      RestartSec=10s
+      LimitNOFILE=40000" >  units/etcd.service
+
+ echo "[Socket]
+      ListenStream=/var/run/fleet.sock"  >  units/fleet.socket
+
+ echo  "[Unit]
+      Description=fleet daemon
+      Wants=etcd.service
+      After=etcd.service
+      Wants=fleet.socket
+      After=fleet.socket
+
+      [Service]
+      ExecStart=/usr/bin/fleetd
+      Restart=always
+      RestartSec=10s"  > units/fleet.service
+
+ echo "[Unit]
+      Description=Panamax API
+      After=docker.service fleet.service fleet.socket
+      Requires=docker.service fleet.service fleet.socket
+
+      [Service]
+      ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_API
+      ExecStart=$(getRunCmdAPI)
+      ExecStop=/usr/bin/docker stop $CONTAINER_NAME_API
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target" > units/panamax-api.service
+
+ echo "[Unit]
+      Description=Panamax UI
+      After=panamax-api.service
+      Requires=panamax-api.service
+
+      [Service]
+      ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_UI
+      ExecStart=$(getRunCmdUI)
+      ExecStop=/usr/bin/docker stop $CONTAINER_NAME_UI
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target" > units/panamax-ui.service
+
+#  echo "[Unit]
+#        Description=Panamax Metrics
+#
+#        [Service]
+#        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
+#        ExecStart=/usr/bin/docker  run --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro   --volume=/var/lib/docker/:/var/lib/docker:ro  --publish=3002:8080 --name=$CONTAINER_NAME_CADVISOR  $CADVISOR_IMAGE
+#        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
+#        Restart=always
+#
+#        [Install]
+#        WantedBy=multi-user.target" > units/panamax-metrics.service
+
+ echo "[Unit]
+        Description=Panamax Redis
+        Before=panamax-dray.service
+        After=docker.service
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY_REDIS
+        ExecStart=/usr/bin/docker  run --expose=6379 --name=$CONTAINER_NAME_DRAY_REDIS  $DRAY_REDIS_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY_REDIS
+        Restart=always
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-redis.service
+
+echo "[Unit]
+        Description=Panamax Dray
+        Before=panamax-api.service
+        After=docker.service panamax-redis.service
+        Requires=panamax-redis.service
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_DRAY
+        ExecStart=/usr/bin/docker  run --link $CONTAINER_NAME_DRAY_REDIS:REDIS --volume=/var/run/docker.sock:/var/run/docker.sock:rw --publish=3003:3000 --name=$CONTAINER_NAME_DRAY  $DRAY_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_DRAY
+        Restart=always
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-dray.service
+
+}
+
+function getRunCmdAPI {
+    local dbMount=""
+    if [[ "$PERSIST_DB" == "true" ]]; then
+        dbMount="-v /var/panamax-data:/usr/src/app/db/mnt"
+    fi
+
+    docker_ip="`ifconfig docker0 2>/dev/null | grep 'inet ' | awk '{print $2}' | grep -o "[0-9]*\.[0-9]*\.[0-9]*"`"
+    if [[ "$docker_ip" != "" ]]; then
+        COREOS_ENDPOINT="http://$docker_ip"
+    fi
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 -v /var/run/docker.sock:/var/run/docker.sock:rw -v /var/run/fleet.sock:/var/run/fleet.sock -e DRAY_PORT=$COREOS_ENDPOINT:3003 -e PANAMAX_ID=$PANAMAX_ID -e INSECURE_REGISTRY=$INSECURE_REGISTRY -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531  -t  -p 3001:3000  $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG"
+}
+
+function getRunCmdUI {
+    echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -m=1g -c=10 -v /var/run/docker.sock:/var/run/docker.sock:rw --link $CONTAINER_NAME_API:PMX_API -e INSECURE_REGISTRY=$INSECURE_REGISTRY -p 3000:3000  $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
+}
+
+function startCoreOSServices {
+   sudo systemctl stop update-engine-reboot-manager.service
+   sudo systemctl mask update-engine-reboot-manager.service
+   sudo systemctl stop update-engine.service
+   sudo systemctl mask update-engine.service
+   sudo systemctl enable etcd fleet systemd-journal-gatewayd.socket
+   sudo systemctl restart etcd systemd-journal-gatewayd.socket
+   sudo systemctl stop ntpd.service
+   sudo systemctl start ntpd.service
+   sudo systemctl stop fleet.service;
+   sudo systemctl restart fleet.socket;
+   sudo systemctl start fleet.service
+}
+
+function restartPanamax {
+  echo "Restarting Panamax"
+  startCoreOSServices
+  operatePanamax restart
+  waitUntilStarted
+  echo "Panamax restarted"
+}
+
+function stopPanamax {
+  echo Stopping Panamax
+  operatePanamax stop
+  startCoreOSServices
+  echo Panamax Stopped.
+}
+
+function updatePanamax {
+    echo Updating Panamax
+    uninstallPanamax
+    installPanamax
+    echo Panamax Updated
+    echo "***PLEASE NOTE: If running Panamax on a dedicated CoreOS VM from a cloud provider, please ensure you are running the latest version of CoreOS from the stable branch, to ensure compatibility with Panamax.***"
+}
+
+
+function openPanamax {
+    echo "waiting for panamax to start....."
+    until [ `curl -sL -w "%{http_code}" "http://localhost:$PMX_PORT_UI"  -o /dev/null` == "200" ];
+    do
+      printf .
+      sleep 2
+    done
+
+    echo ""
+    open "http://localhost:$PMX_PORT_UI" || { echo "Please goto http://localhost:$PMX_PORT_UI"; }
+    echo ""
+    echo ""
+}
+
+
+function waitUntilStarted {
+    logStartTime="`date +'%Y-%m-%d %H:%M:%S'`"
+    until [[ "`curl -sL -w "%{http_code}" "http://localhost:3000"  -o /dev/null`" == "200" ]];
+    do
+       journalctl --since="$logStartTime" | grep  'PMX\|Panamax'                     
+       sleep 1
+       logStartTime="`date +'%Y-%m-%d %H:%M:%S'`"
+    done
+}
+
+function showHelp {
+    echo ""
+    echo "Usage:
+         ./setup.sh <install/reinstall/restart/stop>
+         ./setup.sh "
+    echo ""
+}
+
+function readParams {
+    for i in "$@"
+    do
+    case $i in
+        --dev)
+        IMAGE_TAG=dev
+        ;;
+        --stable)
+        IMAGE_TAG=latest
+        ;;
+        install)
+        operation=install
+        ;;
+        reinstall)
+        operation=reinstall
+        ;;
+        uninstall)
+        operation=uninstall
+        ;;
+        stop)
+        operation=stop
+        ;;
+        start)
+        operation=restart
+        ;;
+        restart)
+        operation=restart
+        ;;
+        update)
+        operation=update
+        ;;
+        -pid=*)
+        PANAMAX_ID="${i#*=}"
+        ;;
+        -insecureregistry=*)
+        INSECURE_REGISTRY="${i#*=}"
+        ;;
+        *)
+        exit 1;
+        ;;
+    esac
+    done
+}
+
+function main {
+    readParams "$@"
+    if [[ $# -gt 0 ]]; then
+        case $operation in
+            install) installPanamax && exit 0 || { showHelp; exit 1; } ;;
+            reinstall) installPanamax && exit 0 || { showHelp; exit 1; } ;;
+            restart) restartPanamax || { showHelp; exit 1; } ;;
+            stop) stopPanamax || { showHelp; exit 1; } ;;
+            update) updatePanamax || { showHelp; exit 1; } ;;
+            *) showHelp;;
+        esac
+    else
+        echo "Please select one of the following options: "
+        select operation in "install" "restart" "reinstall" "update"; do
+        case $operation in
+            install) installPanamax && exit 0; break;;
+            reinstall   ) installPanamax && exit 0; break;;
+            restart) restartPanamax; break;;
+            stop) stopPanamax; break;;
+            update) updatePanamax; break;;
+        esac
+        done
+    fi
+}
+
+main "$@";
