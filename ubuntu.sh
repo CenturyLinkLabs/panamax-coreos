@@ -2,7 +2,7 @@
 
 set -x
 
-installer='panamax-latest.tar.gz'
+installer='panamax-0.0.1.tar.gz'
 destination=~/.panamax
 curl -O "http://download.panamax.io/installer/$installer"
 mkdir -p ${destination} && tar -C ${destination} -zxvf ${installer}
