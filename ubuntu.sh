@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 installer='panamax-0.0.1.tar.gz'
 destination=~/.panamax
 curl -O "http://download.panamax.io/installer/$installer"
