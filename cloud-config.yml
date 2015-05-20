@@ -1,0 +1,61 @@
+#cloud-config
+
+---
+hostname: panamax
+snappy:
+  units:
+    - name: etcd.service
+      command: start
+      content: |
+        [Unit]
+        Description=etcd
+
+        [Service]
+        User=root
+        PermissionsStartOnly=true
+        Environment=ETCD_DATA_DIR=/var/lib/etcd
+        Environment=ETCD_NAME=%m
+        ExectStartPre=bash -c "cd /usr/local/bin && curl -L https://github.com/coreos/etcd/releases/download/v0.4.6/etcd-v0.4.6-linux-amd64.tar.gz | tar xz --strip-components="1" --no-anchored 'etcd'"
+        ExecStart=/usr/bin/etcd
+        Restart=always
+        RestartSec=10s
+        LimitNOFILE=40000
+    - name: fleet.socket
+      content: |
+        [Socket]
+        ListenStream=/var/run/fleet.sock
+    - name: fleet.service
+      command: start
+          content: |
+            [Unit]
+            Description=fleet
+
+            [Service]
+            User=root
+            PermissionsStartOnly=true
+            Environment=ETCD_DATA_DIR=/var/lib/etcd
+            Environment=ETCD_NAME=%m
+            ExectStartPre=bash -c "cd /usr/local/bin && curl -L https://github.com/coreos/fleet/releases/download/v0.9.2/fleet-v0.9.2-linux-amd64.tar.gz | tar xz --strip-components="1" --no-anchored 'fleetd'"
+            ExecStart=/usr/bin/etcd
+            Restart=always
+            RestartSec=10s
+            LimitNOFILE=40000
+    - name: docker.service
+      content: |
+        [Unit]
+        Description=Docker Application Container Engine
+        Documentation=http://docs.docker.com
+        After=docker.socket early-docker.target network.target
+        Requires=docker.socket early-docker.target
+
+        [Service]
+        Environment=TMPDIR=/var/tmp
+        EnvironmentFile=-/run/flannel_docker_opts.env
+        EnvironmentFile=/etc/network-environment
+        MountFlags=slave
+        LimitNOFILE=1048576
+        LimitNPROC=1048576
+        ExecStart=/usr/lib/coreos/dockerd --daemon --host=fd:// --registry-mirror=http://${DEFAULT_IPV4}:5000 $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+
+        [Install]
+        WantedBy=multi-user.target

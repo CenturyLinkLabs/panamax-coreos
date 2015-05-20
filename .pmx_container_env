@@ -14,3 +14,6 @@ CADVISOR_IMAGE=google/cadvisor:0.6.2
 DRAY_REDIS_IMAGE=centurylink/redis:latest
 DRAY_IMAGE=centurylink/dray:latest
 INSECURE_REGISTRY=n
+ETCD_URL="https://github.com/coreos/etcd/releases/download/v0.4.6/etcd-v0.4.6-linux-amd64.tar.gz"
+FLEET_URL="https://github.com/coreos/fleet/releases/download/v0.9.2/fleet-v0.9.2-linux-amd64.tar.gz"
+UNIT_FILES_PATH="/lib/systemd/system"
