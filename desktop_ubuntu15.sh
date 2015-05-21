@@ -9,18 +9,10 @@ PMX_UI_TAGS="https://index.docker.io/v1/repositories/centurylink/panamax-ui/tags
 PMX_API_TAGS="https://index.docker.io/v1/repositories/centurylink/panamax-api/tags"
 SETUP_UPDATE_URL="http://download.panamax.io/installer/.versions"
 DOCUMENTATION_URL="https://github.com/CenturyLinkLabs/panamax-ui/wiki/Release-Notes"
-CWD="${HOME}/.panamax/"
-PMX_VAR="${HOME}/.panamax"
-ENV="$CWD".env_tmp
-ENV_COMMIT="$PMX_VAR"/.env
-IMAGES_VDI="$PMX_VAR"/images.vdi
-IMAGES_ZIP="$PMX_VAR"/images.tar.gz
-IMAGES_CDN="http://download.panamax.io/images.tar.gz"
+CWD="${HOME}/.panamax"
+ENV="$CWD"/.env_tmp
+ENV_COMMIT="$CWD"/.env
 PMX_NAME="panamax"
-PMX_VM_MEMORY_DEFAULT=1536
-PMX_VM_CPUS_DEFAULT=2
-PMX_VM_PRIVATE_IP="127.0.0.1"
-PMX_LOCAL_DOMAIN="panamax.local"
 PMX_INSECURE_REGISTRY="n"
 
 echo_install="init:          First time installing Panamax! - Downloads installs latest Panamax version."
@@ -53,10 +45,9 @@ function displayLogo {
 function  checkPreReqs {
     while [ -n "$1" ]
     do
+      command -v "$1" >/dev/null 2>&1 || { echo >&2 " '$1' is required but not installed.  Aborting; please execute $./ubuntu15_prereqs_install.sh"; exit 1; }
       if [[ "$1" == "docker" ]]; then
           docker -v | grep -w '1\.[2-9]'  >/dev/null 2>&1 || { echo "docker 1.2 or later is required but not installed. Aborting."; exit 1; }
-      else
-          command -v "$1" >/dev/null 2>&1 || { echo >&2 " '$1' is required but not installed.  Aborting; please execute $./ubuntu15_prereqs_install.sh"; exit 1; }
       fi
       shift
     done
@@ -64,8 +55,7 @@ function  checkPreReqs {
 
 function checkPanamaxExists {
     if [[ "$(pmxContainersInstalled)" != "1" ]]; then
-        echo "$PMX_NAME does not exist. Please run ($./panamax init) to install Panamax."
-        echo ""
+        echo -e "$PMX_NAME does not exist. Please run ($./panamax init) to install Panamax.\n"
         exit 1;
     fi
 }
@@ -80,34 +70,15 @@ function getLatestVersion {
     echo "${arr_vs[0]}"
 }
 
-function newerVersionAvailable() {
-    local v1=$1
-    local vList=$2
-    majVer=`echo $v1 | awk -F "." '{ print $1 }'`
-    minVer=`echo $v1 | awk -F "." '{ print $2 }'`
-    patVer=`echo $v1 | awk -F "." '{ print $3 }'`
-
-    nextMinVer=`echo $minVer + 1 | bc`
-    nextMajVer=`echo $majVer + 1 | bc`
-    nextPatVer=`echo $patVer + 1 | bc`
-    local newVerAvailable=0
-    if [[ "`echo $vList | grep "$majVer.$minVer.$nextPatVer"`" != "" \
-        || "`echo $vList | grep "$majVer.$nextMinVer.[0-9]\+"`" != "" \
-        || "`echo $vList | grep "$nextMajVer\.[0-9]+\.[0-9]+"`" != "" ]]; then
-      newVerAvailable=1
-    fi
-    echo $newVerAvailable
-}
-
 function checkForSetupUpdate {
     if [[ "$checkedSetupForUpdates" != "1" || "$1" == "u" ]]; then
         checkedSetupForUpdates="1"
         updateAvailableForSetup="0"
         if [[ -f "$ENV" ]]; then
             source "$ENV"
-            versionList=`curl -sL $SETUP_UPDATE_URL | grep tar`
-            local newVersionAvailable="`newerVersionAvailable $PMX_SETUP_VERSION \"$versionList\"`"
-            if [[ "$newVersionAvailable" == "1" ]]; then
+            local vlist=`curl -sL $SETUP_UPDATE_URL | grep tar`
+            local latestv==$(get_latest_version $vlist)
+            if [[ "$latestv" != "$PMX_SETUP_VERSION" ]]; then
               echo "Local Panamax Installer version:"
               echo "$PMX_SETUP_VERSION"
               echo ""
@@ -262,7 +233,7 @@ function setEnvVar {
 
 function openPanamax {
     echo "waiting for panamax to start....."
-    local pmxUrl="http://${PMX_VM_PRIVATE_IP}:3000"
+    local pmxUrl="http://localhost:3000"
     until [ `curl -sL -w "%{http_code}" "${pmxUrl}"   -o /dev/null` == "200" ];
     do
       printf .
@@ -405,6 +376,11 @@ function readParams {
 
 function main {
     checkPreReqs curl docker bc
+
+    if [[ ! -f "$CWD" ]]; then
+        mkdir -p "$CWD"
+    fi
+
     if [[ -f "$ENV_COMMIT" ]]; then
         cp "$ENV_COMMIT" "$ENV"
         source "$ENV"
@@ -413,13 +389,10 @@ function main {
         touch "$ENV"
     fi
 
-    if [[ ! -f "$PMX_VAR" ]]; then
-        mkdir -p "$PMX_VAR"
-    fi
-
     if [[ "$1" != "-sv" ]]; then
         displayLogo
     fi
+
     readParams "$@"
 
     if [[ $# -gt 0 ]]; then
@@ -433,7 +406,6 @@ function main {
             info) checkForUpdate "e";;
             update) updatePanamax;;
             uninstall) uninstallPanamax;;
-            ssh) sshToPanamax;;
             debug) debug;;
             *) showLongHelp;;
         esac
