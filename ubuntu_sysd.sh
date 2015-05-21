@@ -1,10 +1,5 @@
 #!/bin/bash
 
-source .pmx_container_env
-if [[ -f ".env" ]]; then
-    source .env
-fi
-
 function operateDray {
  sudo systemctl $1 panamax-redis.service
  sudo systemctl $1 panamax-dray.service

@@ -44,7 +44,7 @@ function displayLogo {
 function  checkPreReqs {
     while [ -n "$1" ]
     do
-      command -v "$1" >/dev/null 2>&1 || { echo >&2 "'$1' is required but not installed.  Aborting; please execute $./ubuntu15_prereqs_install.sh"; exit 1; }
+      command -v "$1" >/dev/null 2>&1 || { echo >&2 "'$1' is required but not installed.  Aborting; please execute $cd $CWD && ./ubuntu15_prereqs_install.sh"; exit 1; }
       if [[ "$1" == "docker" ]]; then
           docker -v | grep -w '1\.[2-9]'  >/dev/null 2>&1 || { echo "docker 1.2 or later is required but not installed. Aborting."; exit 1; }
       fi
@@ -159,7 +159,7 @@ function getDockerTags {
 }
 
 function saveVersionInfo {
-    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWD.version")\""
+    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWD\.version")\""
     setEnvVar "PMX_INSTALL_DATE" "\"`date +%s`\""
     if [[ "$PMX_IMAGE_TAG" == "stable" ]]; then
         setEnvVar "PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getDockerTags $PMX_UI_TAGS)\"`"
@@ -377,6 +377,8 @@ function main {
     if [[ ! -f "$CWD" ]]; then
         mkdir -p "$CWD"
     fi
+
+    source "$CWD"/.pmx_container_env
 
     if [[ -f "$ENV_COMMIT" ]]; then
         cp "$ENV_COMMIT" "$ENV"
