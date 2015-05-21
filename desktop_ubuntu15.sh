@@ -1,7 +1,5 @@
 #!/bin/bash
 
-. ubuntu_sysd.sh
-
 BASEBOX_DEFAULT="panamax-coreos-box-647.0.0"
 BASEBOX_URL_DEFAULT="http://stable.release.core-os.net/amd64-usr/647.0.0/coreos_production_vagrant.box"
 PMX_IMAGE_TAG_DEFAULT=stable
@@ -15,6 +13,8 @@ ENV_COMMIT="$CWD"/.env
 PMX_NAME="panamax"
 PMX_INSECURE_REGISTRY="n"
 
+. "$CWD"/ubuntu_sysd.sh
+
 echo_install="init:          First time installing Panamax! - Downloads installs latest Panamax version."
 echo_restart="restart:       Stops and Starts Panamax."
 echo_reinstall="reinstall:     Deletes your applications; reinstalls to latest Panamax version."
@@ -26,7 +26,6 @@ echo_start="up:            Starts Panamax"
 echo_uninstall="delete:        Uninstalls Panamax."
 echo_help="help:          Show this help"
 echo_debug="debug:         Display your current Panamax settings."
-
 
 
 function displayLogo {
@@ -45,7 +44,7 @@ function displayLogo {
 function  checkPreReqs {
     while [ -n "$1" ]
     do
-      command -v "$1" >/dev/null 2>&1 || { echo >&2 " '$1' is required but not installed.  Aborting; please execute $./ubuntu15_prereqs_install.sh"; exit 1; }
+      command -v "$1" >/dev/null 2>&1 || { echo >&2 "'$1' is required but not installed.  Aborting; please execute $./ubuntu15_prereqs_install.sh"; exit 1; }
       if [[ "$1" == "docker" ]]; then
           docker -v | grep -w '1\.[2-9]'  >/dev/null 2>&1 || { echo "docker 1.2 or later is required but not installed. Aborting."; exit 1; }
       fi
@@ -77,17 +76,15 @@ function checkForSetupUpdate {
         if [[ -f "$ENV" ]]; then
             source "$ENV"
             local vlist=`curl -sL $SETUP_UPDATE_URL | grep tar`
-            local latestv==$(get_latest_version $vlist)
+            local latestv==$(getLatestVersion $vlist)
             if [[ "$latestv" != "$PMX_SETUP_VERSION" ]]; then
               echo "Local Panamax Installer version:"
-              echo "$PMX_SETUP_VERSION"
-              echo ""
+              echo -e "$PMX_SETUP_VERSION\n"
               echo "*** Panamax Installer is out of date! Please run ($ brew upgrade http://download.panamax.io/installer/brew/panamax.rb && panamax reinstall) to update. ***"
               updateAvailableForSetup="1"
             elif [[ "$1" == "e" ]]; then
               echo "Local Panamax Installer version:"
-              echo "  $PMX_SETUP_VERSION"
-              echo ""
+              echo -e "  $PMX_SETUP_VERSION\n"
             fi
         else
             echo ""

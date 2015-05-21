@@ -1,10 +1,9 @@
 #!/bin/bash
 
-#TODO Check for ubuntu 15.04
-#TODO Check for admin rights
-
-source ./.pmx_container_env
-source ./.env
+source .pmx_container_env
+if [[ -f ".env" ]]; then
+    source .env
+fi
 
 function operateDray {
  sudo systemctl $1 panamax-redis.service
