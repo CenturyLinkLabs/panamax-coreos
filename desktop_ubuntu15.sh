@@ -54,7 +54,7 @@ function  checkPreReqs {
 
 function checkPanamaxExists {
     if [[ "$(pmxContainersInstalled)" != "1" ]]; then
-        echo -e "$PMX_NAME does not exist. Please run ($./panamax init) to install Panamax.\n"
+        echo -e "$PMX_NAME does not exist. Please run ('$panamax init') to install Panamax.\n"
         exit 1;
     fi
 }

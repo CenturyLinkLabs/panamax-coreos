@@ -13,4 +13,6 @@ fi
 sudo ln -sf ~/.panamax/panamax /usr/local/bin/panamax
 curl -O http://download.panamax.io/panamaxcli/panamaxcli-linux
 sudo mv panamaxcli-linux /usr/local/bin/pmxcli && chmod 755 /usr/local/bin/pmxcli
+cd ~/.panamax && sudo ./ubuntu15_prereqs_install.sh
+panamax
 #echo "Execute panamax and select to continue."
