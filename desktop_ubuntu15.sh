@@ -1,7 +1,5 @@
 #!/bin/bash
 
-BASEBOX_DEFAULT="panamax-coreos-box-647.0.0"
-BASEBOX_URL_DEFAULT="http://stable.release.core-os.net/amd64-usr/647.0.0/coreos_production_vagrant.box"
 PMX_IMAGE_TAG_DEFAULT=stable
 PMX_UI_TAGS="https://index.docker.io/v1/repositories/centurylink/panamax-ui/tags"
 PMX_API_TAGS="https://index.docker.io/v1/repositories/centurylink/panamax-api/tags"
@@ -46,7 +44,7 @@ function  checkPreReqs {
     do
       command -v "$1" >/dev/null 2>&1 || { echo >&2 "'$1' is required but not installed.  Aborting; please execute $cd $CWD && ./ubuntu15_prereqs_install.sh"; exit 1; }
       if [[ "$1" == "docker" ]]; then
-          docker -v | grep -w '1\.[2-9]'  >/dev/null 2>&1 || { echo "docker 1.2 or later is required but not installed. Aborting."; exit 1; }
+          docker -v | grep -w '1\.[5-9]'  >/dev/null 2>&1 || { echo "docker 1.5 or later is required but not installed. Aborting."; exit 1; }
       fi
       shift
     done
@@ -80,14 +78,14 @@ function checkForSetupUpdate {
             if [[ "$latestv" != "$PMX_SETUP_VERSION" ]]; then
               echo "Local Panamax Installer version:"
               echo -e "$PMX_SETUP_VERSION\n"
-              echo "*** Panamax Installer is out of date! Please run ($ brew upgrade http://download.panamax.io/installer/brew/panamax.rb && panamax reinstall) to update. ***"
+              echo "*** Panamax Installer is out of date! Please run ($ curl http://download.panamax.io/installer/ubuntu.sh | bash && panamax reinstall) to update. ***"
               updateAvailableForSetup="1"
             elif [[ "$1" == "e" ]]; then
               echo "Local Panamax Installer version:"
               echo -e "  $PMX_SETUP_VERSION\n"
             fi
         else
-            echo ""
+            echo "Missing or corrupt environment, please reinstall panamax."
         fi
     fi
 }
@@ -136,7 +134,7 @@ function checkForPanamaxUpdate {
 }
 
 function getPanamaxSetupVersion {
-    echo "\"$(<"$CWD.version")\""
+    echo "\"$(<"$CWD\.version")\""
     exit 0;
 }
 
@@ -174,14 +172,11 @@ function pmxContainersInstalled {
 
 function installPanamax {
     echo "" > $ENV
-    source $ENV
 
     if [[ "$operation" == "install"  &&  "$(pmxContainersInstalled)" == "1"  ]]; then
         echo "Some components of $PMX_NAME have been created already. Please re-install or delete $PMX_NAME and try again."
         exit 1;
-    fi
-
-    if [[ "$operation" == "reinstall" && "$(pmxContainersInstalled)" == "0"  ]]; then
+    elif [[ "$operation" == "reinstall" && "$(pmxContainersInstalled)" == "0"  ]]; then
         echo "$PMX_NAME is not installed. Please run ./panamax and select init."
         exit 1;
     fi
@@ -213,9 +208,8 @@ function installPanamax {
     source "$ENV"
 
     if [[  $operation == "reinstall" ]]; then
-        echo ""
-        echo "Reinstalling Panamax..."
-        sysd_installPanamax
+        echo -e "\nReinstalling Panamax..."
+        sysd_updatePanamax
     else
         sysd_installPanamax
     fi
@@ -279,7 +273,6 @@ function stopPanamax {
 }
 
 function updatePanamax {
-    
     checkPanamaxExists
     setEnvVar "PMX_OPERATION" "$operation"
     setEnvVar "PMX_IMAGE_TAG" "$PMX_IMAGE_TAG"

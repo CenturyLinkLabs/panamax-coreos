@@ -170,12 +170,12 @@ function getRunCmdAPI {
 
     docker_ip="`ifconfig docker0 2>/dev/null | grep 'inet ' | awk '{print $2}' | grep -o "[0-9]*\.[0-9]*\.[0-9]*"`"
     if [[ "$docker_ip" != "" ]]; then
-        COREOS_ENDPOINT="http://$docker_ip"
+        DOCKER_IP="http://$docker_ip"
     fi
     echo "/usr/bin/docker run --name $CONTAINER_NAME_API $dbMount -m=1g -c=10 \
     -v /var/run/docker.sock:/var/run/docker.sock:rw -v /var/run/fleet.sock:/var/run/fleet.sock \
-    -e DRAY_PORT=$COREOS_ENDPOINT:3003 -e PANAMAX_ID=$PANAMAX_ID -e INSECURE_REGISTRY=$INSECURE_REGISTRY \
-    -e JOURNAL_ENDPOINT=$COREOS_ENDPOINT:19531  -t  -p 3001:3000  $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG"
+    -e DRAY_PORT=$DOCKER_IP:3003 -e PANAMAX_ID=$PANAMAX_ID -e INSECURE_REGISTRY=$INSECURE_REGISTRY \
+    -e JOURNAL_ENDPOINT=$DOCKER_IP:19531  -t  -p 3001:3000  $REPO_URL_NAMESPACE/$IMAGE_API:$IMAGE_TAG"
 }
 
 function getRunCmdUI {
@@ -200,8 +200,6 @@ function sysd_updatePanamax {
     sysd_uninstallPanamax
     sysd_installPanamax
     echo Panamax Updated
-    echo -e "***PLEASE NOTE: If running Panamax on a dedicated CoreOS VM from a cloud provider, please ensure you are running \
-    the latest version of CoreOS from the stable branch, to ensure compatibility with Panamax.***"
 }
 
 function waitUntilStarted {
