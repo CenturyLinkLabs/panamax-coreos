@@ -134,7 +134,7 @@ function checkForPanamaxUpdate {
 }
 
 function getPanamaxSetupVersion {
-    echo "\"$(<"$CWD\.version")\""
+    echo "\"$(<"$CWD/.version")\""
     exit 0;
 }
 
@@ -157,7 +157,7 @@ function getDockerTags {
 }
 
 function saveVersionInfo {
-    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWD\.version")\""
+    setEnvVar "PMX_SETUP_VERSION" "\"$(<"$CWD/.version")\""
     setEnvVar "PMX_INSTALL_DATE" "\"`date +%s`\""
     if [[ "$PMX_IMAGE_TAG" == "stable" ]]; then
         setEnvVar "PMX_INSTALL_TAG_UI" "`getLatestVersion  \"$(getDockerTags $PMX_UI_TAGS)\"`"
