@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.6.3 - 2015-05-29
+-----------------
+###Added
+- Updated CoreOS to latest stable release (647.2.0)
+- Updated cadvisor to 0.13.0
+
 0.6.2 - 2015-05-13
 -----------------
 ###Added
