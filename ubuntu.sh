@@ -13,4 +13,4 @@ fi
 sudo ln -sf ~/.panamax/panamax /usr/local/bin/panamax
 curl -O http://download.panamax.io/panamaxcli/panamaxcli-linux
 sudo mv panamaxcli-linux /usr/local/bin/pmxcli && chmod 755 /usr/local/bin/pmxcli
-echo -e "\n\nExecute panamax and select init to continue.\n\n"
+echo -e "\n\n***Panamax is ready to install. Run 'panamax' to start the installation.***\n\n"
