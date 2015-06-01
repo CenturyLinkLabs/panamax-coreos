@@ -224,7 +224,7 @@ function setEnvVar {
 
 function openPanamax {
     echo "waiting for panamax to start....."
-    local pmxUrl="http://localhost:3000"
+    local pmxUrl="http://<host_ip>:3000"
     until [ `curl -sL -w "%{http_code}" "${pmxUrl}"   -o /dev/null` == "200" ];
     do
       printf .
