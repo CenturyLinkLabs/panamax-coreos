@@ -7,7 +7,7 @@ function operateDray {
 
 function operatePanamax {
  operateDray $1
- #sudo systemctl $1 panamax-metrics.service
+ sudo systemctl $1 panamax-metrics.service
  sudo systemctl $1 panamax-api.service
  sudo systemctl $1 panamax-ui.service
 }
@@ -121,18 +121,18 @@ function writeUnitFiles {
       [Install]
       WantedBy=multi-user.target" > units/panamax-ui.service
 
-#  echo "[Unit]
-#        Description=Panamax Metrics
-#
-#        [Service]
-#        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
-#        ExecStart=/usr/bin/docker  run --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro   \
-# --volume=/var/lib/docker/:/var/lib/docker:ro  --publish=3002:8080 --name=$CONTAINER_NAME_CADVISOR  $CADVISOR_IMAGE
-#        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
-#        Restart=always
-#
-#        [Install]
-#        WantedBy=multi-user.target" > units/panamax-metrics.service
+  echo "[Unit]
+        Description=Panamax Metrics
+
+        [Service]
+        ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME_CADVISOR
+        ExecStart=/usr/bin/docker  run --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro   \
+             --volume=/var/lib/docker/:/var/lib/docker:ro  --publish=3002:8080 --name=$CONTAINER_NAME_CADVISOR  $CADVISOR_IMAGE
+        ExecStop=/usr/bin/docker stop $CONTAINER_NAME_CADVISOR
+        Restart=always
+
+        [Install]
+        WantedBy=multi-user.target" > units/panamax-metrics.service
 
  echo "[Unit]
         Description=Panamax Redis
@@ -180,7 +180,7 @@ function getRunCmdAPI {
 
 function getRunCmdUI {
     echo "/usr/bin/docker run --name $CONTAINER_NAME_UI -m=1g -c=10 -v /var/run/docker.sock:/var/run/docker.sock:rw \
-    --link $CONTAINER_NAME_API:PMX_API -e INSECURE_REGISTRY=$INSECURE_REGISTRY -p 3000:3000  $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
+    --link $CONTAINER_NAME_API:PMX_API  --link $CONTAINER_NAME_CADVISOR:CADVISOR -e INSECURE_REGISTRY=$INSECURE_REGISTRY -p 3000:3000  $REPO_URL_NAMESPACE/$IMAGE_UI:$IMAGE_TAG"
 }
 
 function sysd_restartPanamax {
