@@ -61,7 +61,7 @@ function checkPreReqs {
         echo $'Vagrant 1.6 or newer installed.'
     fi
 
-    VBoxManage -v | grep -w '4\.[3-9]' 2>&1 >/dev/null
+    VBoxManage -v | grep -w '4\.[3-]\|5\.[0-9]' 2>&1 >/dev/null
     if [[ "$?" -ne "0" ]]; then
         echo "Please install Virtualbox 4.3 or newer (https://www.virtualbox.org/wiki/Downloads).";
         exit 1;
