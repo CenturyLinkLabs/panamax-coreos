@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+0.6.5 - 2015-07-21
+-----------------
+###Added
+- Updated to support latest Virtualbox (5.0)
+
 0.6.4 - 2015-06-30
 -----------------
 ###Added
