@@ -6,6 +6,10 @@
 
 panamax-coreos installs the Panamax application, which is made up of the [panamax-ui](https://github.com/CenturyLinkLabs/panamax-ui) and [panamax-api](https://github.com/CenturyLinkLabs/panamax-api) codebases.
 
+## NOTE
+
+This repo is no longer being maintained. Users are welcome to fork it, but we make no warranty of its functionality.
+
 ## Installation
 
 [Visit our website](http://panamax.io/get-panamax/) for installation instructions.
